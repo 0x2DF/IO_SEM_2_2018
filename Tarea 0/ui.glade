@@ -2,13 +2,76 @@
 <!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
+  <object class="GtkAboutDialog" id="about">
+    <property name="can_focus">False</property>
+    <property name="title" translatable="yes">Acerca de</property>
+    <property name="type_hint">dialog</property>
+    <property name="program_name">Lanzador de Algorítmos</property>
+    <property name="version">1.0</property>
+    <property name="authors">Philip Arias Ares
+Josue Jimenez Alfaro
+Luis Pablo Monge Angulo</property>
+    <property name="logo">tec_scale.png</property>
+    <signal name="destroy" handler="on_about_destroy" swapped="no"/>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
+    <child internal-child="vbox">
+      <object class="GtkBox">
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox">
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="about_ok_btn">
+                <property name="label" translatable="yes">Ok</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_about_ok_btn_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkTextBuffer" id="textbuffer_rmc">
+    <property name="text" translatable="yes">+ Más información sera disponible en futuras versiones.</property>
+  </object>
+  <object class="GtkTextBuffer" id="textbuffer_tba_1">
+    <property name="text" translatable="yes">+ Esta información aun no está disponible.</property>
+  </object>
+  <object class="GtkTextBuffer" id="textbuffer_tba_2">
+    <property name="text" translatable="yes">+ Esta información aun no está disponible.</property>
+  </object>
+  <object class="GtkTextBuffer" id="textbuffer_tba_3">
+    <property name="text" translatable="yes">+ Esta información aun no está disponible.</property>
+  </object>
+  <object class="GtkTextBuffer" id="textbuffer_tba_4">
+    <property name="text" translatable="yes">+ Esta información aun no está disponible.</property>
+  </object>
   <object class="GtkWindow" id="menu">
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">Lanzador de Algorítmos</property>
-    <property name="default_width">720</property>
-    <property name="default_height">480</property>
+    <property name="title" translatable="yes">Lanzador de Algoritmos</property>
     <signal name="destroy" handler="on_menu_destroy" swapped="no"/>
-    <child>
+    <child type="titlebar">
       <placeholder/>
     </child>
     <child>
@@ -45,7 +108,11 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="editable">False</property>
+                    <property name="wrap_mode">word</property>
+                    <property name="indent">10</property>
                     <property name="cursor_visible">False</property>
+                    <property name="buffer">textbuffer_rmc</property>
+                    <property name="accepts_tab">False</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -59,6 +126,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Ejecutar el programa de Rutas Más Cortas</property>
                     <signal name="clicked" handler="on_rmc_btn_clicked" swapped="no"/>
                   </object>
                   <packing>
@@ -73,6 +141,7 @@
               <object class="GtkLabel" id="rmc_tab">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Rutas Más Cortas</property>
                 <property name="label" translatable="yes">Rutas Más Cortas</property>
               </object>
               <packing>
@@ -90,7 +159,10 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="editable">False</property>
+                    <property name="indent">10</property>
                     <property name="cursor_visible">False</property>
+                    <property name="buffer">textbuffer_tba_1</property>
+                    <property name="accepts_tab">False</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -104,6 +176,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Ejecutar el programa predeterminado 'pending'</property>
                     <signal name="clicked" handler="on_tba_btn_1_clicked" swapped="no"/>
                   </object>
                   <packing>
@@ -121,6 +194,7 @@
               <object class="GtkLabel" id="tba_tab_1">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">TBA</property>
                 <property name="label" translatable="yes">TBA</property>
               </object>
               <packing>
@@ -139,7 +213,10 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="editable">False</property>
+                    <property name="indent">10</property>
                     <property name="cursor_visible">False</property>
+                    <property name="buffer">textbuffer_tba_2</property>
+                    <property name="accepts_tab">False</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -153,6 +230,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Ejecutar el programa predeterminado 'pending'</property>
                     <signal name="clicked" handler="on_tba_btn_2_clicked" swapped="no"/>
                   </object>
                   <packing>
@@ -170,6 +248,7 @@
               <object class="GtkLabel" id="tba_tab_2">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">TBA</property>
                 <property name="label" translatable="yes">TBA</property>
               </object>
               <packing>
@@ -188,7 +267,10 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="editable">False</property>
+                    <property name="indent">10</property>
                     <property name="cursor_visible">False</property>
+                    <property name="buffer">textbuffer_tba_3</property>
+                    <property name="accepts_tab">False</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -202,6 +284,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Ejecutar el programa predeterminado 'pending'</property>
                     <signal name="clicked" handler="on_tba_btn_3_clicked" swapped="no"/>
                   </object>
                   <packing>
@@ -219,6 +302,7 @@
               <object class="GtkLabel" id="tba_tab_3">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">TBA</property>
                 <property name="label" translatable="yes">TBA</property>
               </object>
               <packing>
@@ -237,7 +321,10 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="editable">False</property>
+                    <property name="indent">10</property>
                     <property name="cursor_visible">False</property>
+                    <property name="buffer">textbuffer_tba_4</property>
+                    <property name="accepts_tab">False</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -251,6 +338,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Ejecutar el programa predeterminado 'pending'</property>
                     <signal name="clicked" handler="on_tba_btn_4_clicked" swapped="no"/>
                   </object>
                   <packing>
@@ -268,6 +356,7 @@
               <object class="GtkLabel" id="tba_tab_4">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">TBA</property>
                 <property name="label" translatable="yes">TBA</property>
               </object>
               <packing>
@@ -288,12 +377,12 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="halign">end</property>
+            <property name="tooltip_text" translatable="yes">Salir de la aplicación</property>
             <signal name="clicked" handler="on_exit_btn_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>
-            <property name="fill">False</property>
+            <property name="fill">True</property>
             <property name="position">2</property>
           </packing>
         </child>
