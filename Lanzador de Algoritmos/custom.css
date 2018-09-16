@@ -1,0 +1,106 @@
+#newVal {
+    background: #76E470;
+    color: #31592F;
+    font-weight: bold;
+}
+
+#entry{
+    background: #E7E7E7;
+    color: #944446;
+}
+
+#window{
+    background-color: #3A3736;
+    color: #F8F8F8;
+    font-size:14px;
+    font-weight: bold;
+}
+
+#button{
+    background-color: #292828;
+    color: #944446;
+    font-size:14px;
+    font-weight: bold;
+}
+#button:hover{
+    background-color: #3A3736;
+    color: #FD8083;
+}
+
+#button_select{
+    background-color: #292828;
+    color: #292828;
+    font-size:14px;
+}
+#button_select:hover{
+    background-color: #3A3736;
+    color: #944446;
+}
+
+#label{
+    color: #FD8083;
+}
+
+#load_label{
+    background-color: #24E711;
+}
+
+#no_load_label{
+    background-color: #FFFFFF;
+}
+
+#box{
+    background: #E7E7E7;
+    color: #944446;
+}
+
+#_textview{
+    background-color: #F8F8F8;
+    color: #FD8083;
+}
+
+#_textview text{
+    background-color: #F8F8F8;
+    color: #FD8083;
+}
+
+#entry_valueR{
+    background-color: #F80000;
+    color: #0A0A0A;
+}
+
+#entry_valueG{
+    background-color: #24E711;
+    color: #0A0A0A;
+}
+
+#entry_value{
+    background-color: #0000FF;
+    color: #0A0A0A;
+}
+
+#entry_name{
+    background-color: #FFFF00;
+    color: #0A0A0A;
+}
+
+#max_lbl{
+    font-style: italic;
+    font-weight: bold;
+    font-size:14px;
+}
+
+#restriction_lbl{
+    font-style: italic;
+    font-weight: bold;
+    font-size:14px;
+}
+
+#solution_lbl{
+    font-style: italic;
+    font-weight: bold;
+    font-size:14px;
+}
+
+
+

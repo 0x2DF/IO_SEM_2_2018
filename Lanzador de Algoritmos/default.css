@@ -1,0 +1,22 @@
+#newVal {
+    background: #50ed68;
+    color: black;
+    font-weight: bold;
+}
+
+#window{
+    background-color: #ededed;
+    color: #969696;
+    font-size:14px;
+    font-weight: bold;
+}
+
+#button{
+    font-size:14px;
+    font-weight: bold;
+}
+
+#entry{
+    background-color: #d1d1d1;
+    color: #429ded;
+}
