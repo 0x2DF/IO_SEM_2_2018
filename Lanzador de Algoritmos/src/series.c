@@ -8,9 +8,9 @@
 
 #define FLOAT_LEN 20
 #define TEAM_LEN 20
-
 #define NUMBER_LEN 10
-#define NODES_QTY_LEN 16
+
+#define FORMAT_LEN 100
 #define PATH_LEN 512
 
 static const char GLADE[] = "series.glade";
@@ -20,21 +20,23 @@ int GAMES_QTY = 1;
 int FORMAT_QTY = 1;
 float PH = 0.5;
 float PR = 0.5;
+int LOADED = 0;
 
 char** TEAMS = NULL;
 float** table = NULL;
 int* format = NULL;
 
-int calculate_games(void) { GAMES_QTY = ((BoN + 1) / 2) + 1; }
+int calculate_games(void) { GAMES_QTY = ((BoN + 1) / 2); }
+void on_menu_save_as_button_press_event();
 
 typedef struct Widgets {
   GtkWindow *window;
   GtkWindow *parent;
+  GtkSpinButton *sb_1;
+  GtkSpinButton *sb_2;
+  GtkSpinButton *sb_3;
   GtkEntry *tb_1;
   GtkEntry *tb_2;
-  GtkEntry *tb_3;
-  GtkEntry *tb_4;
-  GtkEntry *tb_5;
   GtkButton *btn_1;
   GtkButton *btn_2;
   GtkButton *btn_3;
@@ -43,48 +45,38 @@ typedef struct Widgets {
   GtkLabel *lbl_2;
 } Widgets;
 
-void clear()
-{
-  if (TEAMS)
-  {
-    free(TEAMS[0]);
-    free(TEAMS[1]);
-    free(TEAMS);
-  }
-  
-  if (table)
-  {
-    for (int i = 0; i < (GAMES_QTY + 1); ++i)
-    {
-      free(table[i]);
-    }
-    free(table);
-  }
-  
-  if (format)
-  {
-    free(format);
-  }
-  
-}
-
 char get_house(int i, int j)
 {
   int k = ((GAMES_QTY * 2) + 1) - (i + j); 
   char house = 'A';
-  for (int i = 0; i < FORMAT_QTY; ++i)
+  int m = 0;
+  int t = format[m];
+
+  while(m < FORMAT_QTY)
   {
-	if (format[i] > k) k-=format[i];
-	else return house;
-	
-    if (house == 'A') house = 'B';
-	else house = 'A';
+    if (k == 0) return house;
+    if (t == 0)
+    {
+      t = format[++m];
+      if (house == 'A') house = 'B';
+      else house = 'A';
+    }
+
+    if ((t - k) < 0)
+    {
+      k -= t;
+      t = 0;
+    }else
+    {
+      t -= k;
+      k = 0;
+    }
   }
 }
 
 void alloc_format()
 {
-  format = malloc(FORMAT_QTY * sizeof(char*));
+  format = malloc(FORMAT_QTY * sizeof(int));
 }
 
 void alloc_teams()
@@ -103,10 +95,9 @@ void alloc_table()
   {
     table[i] = malloc((GAMES_QTY + 1) * sizeof(float));
   }
-  
-  for (int i = 0; i < (GAMES_QTY + 1); ++j)
+  for (int i = 0; i < (GAMES_QTY + 1); ++i)
   {
-    for (int j = 0; j < (GAMES_QTY + 1); ++i)
+    for (int j = 0; j < (GAMES_QTY + 1); ++j)
 	  {
 	    if (i == 0) table[i][j] = 1.0;
       else if (j == 0) table[i][j] = 0.0;
@@ -176,6 +167,208 @@ int isNumeric (const char * s)
     return *p == '\0';
 }
 
+void loadFileBetter(char *filename)
+{
+  int i, k = 0;
+  int error = 0;
+  size_t len = 0;
+  ssize_t read;
+  char * line = NULL;
+  char *token, *str, *tofree;
+  FILE *fp = fopen(filename, "r");
+  if (fp)
+  {
+    while ((read = getline(&line, &len, fp)) != -1) 
+    {
+      if (line[read - 1] == '\n') 
+      {
+        line[read - 1] = '\0';
+        --len;
+      }
+
+      if (k == 0) // Mejor de N
+      {
+        i = 0;
+        tofree = str = strdup(line); 
+        while ((token = strsep(&str, ",")) && (error != 1))
+        {
+          if (i == 0)
+          {
+            if (isNumeric(token))
+            {
+              int temp_qty = (int) strtol(token, (char **)NULL, 10);
+              if (temp_qty > 0)
+              {
+                BoN = temp_qty;
+                calculate_games();
+                if (TEAMS)
+                {
+                  free(TEAMS[0]);
+                  free(TEAMS[1]);
+                  free(TEAMS);
+                }
+                alloc_teams();
+              }else
+              {
+                error = 1;
+                printf("Error: La cantidad de juegos tiene que ser mayor a 0.\n");
+              }
+            }else
+            {
+              error = 1;
+              printf("Error: Cantidad de juegos no es un valor numerico.\n");
+            }
+          }
+          i++;
+        }
+        free(tofree);
+      }else if (k == 1) // Nombres de equipos
+      {
+        i = 0;
+        tofree = str = strdup(line); 
+        while ((token = strsep(&str, ",")) && (error != 1))
+        {
+          if (i < 2)
+          {
+            strcpy(TEAMS[i], token);
+          }else
+          {
+            error = 1;
+            printf("Solo debe ingresar dos equipos\n");
+          }
+          i++;
+        }
+        free(tofree);
+      }else if (k == 2) // Cantidad de formato
+      {
+        i = 0;
+        tofree = str = strdup(line); 
+        while ((token = strsep(&str, ",")) && (error != 1))
+        {
+          if (i == 0)
+          {
+            if (isNumeric(token))
+            {
+              int temp_qty = (int) strtol(token, (char **)NULL, 10);
+              if (temp_qty > 0)
+              {
+                FORMAT_QTY = temp_qty;
+                alloc_format();
+              }else
+              {
+                error = 1;
+                printf("Error: La cantidad para el formato tiene que ser mayor a 0.\n");
+              }
+            }else
+            {
+              error = 1;
+              printf("Error: Cantidad de juegos dentro del formato no es un valor numerico.\n");
+            }
+          }
+          i++;
+        }
+        free(tofree);
+      }else if (k == 3) // Formato
+      {
+        i = 0;
+        tofree = str = strdup(line); 
+        while ((token = strsep(&str, ",")) && (error != 1))
+        {
+          if (i < FORMAT_QTY)
+          {
+            if (isNumeric(token))
+            {
+              int temp_qty = (int) strtol(token, (char **)NULL, 10);
+              format[i] = temp_qty;
+            }else
+            {
+              error = 1;
+              printf("Error: Cantidad de juegos dentro del formato no es un valor numerico.\n");
+            }
+          }
+          i++;
+        }
+        free(tofree);
+      }else // PH PR
+      {
+        i = 0;
+        tofree = str = strdup(line); 
+        while ((token = strsep(&str, ",")) && (error != 1))
+        {
+          if (isfloat(token) || isNumeric(token))
+          {
+            if (i == 0)
+            {
+              PH = atof(token);
+            }else if (i == 1)
+            {
+              PR = atof(token);
+            }
+          }else
+          {
+            error = 1;
+            printf("Error: La probabilidad ingresada no es un valor numerico.\n");
+          }
+          i++;
+        }
+        free(tofree);
+      }
+      if (error)
+      {
+        if (TEAMS)
+        {
+          free(TEAMS[0]);
+          free(TEAMS[1]);
+          free(TEAMS);
+        }
+        TEAMS = NULL;
+        if (format)
+        {
+          free(format);
+        }
+        format = NULL;
+        if (table)
+        {
+          for (int i = 0; i < (GAMES_QTY + 1); ++i)
+          {
+            free(table[i]);
+          }
+          free(table);
+        }
+        table = NULL;
+        printf("Se produjo un error leyendo los contenidos del archivo. Reviselo y vuelva a intentar.\n");
+        LOADED = -1;
+        break;
+      }
+      k++;
+    }
+    fclose(fp);
+    if (line) free(line);
+  }
+}
+
+void saveFile(char *filename)
+{
+  FILE *fp = fopen(filename, "w");
+  if (fp)
+  {
+    fprintf(fp, "%d\n", BoN);
+    fprintf(fp, "%s,%s\n", TEAMS[0], TEAMS[1]);
+    fprintf(fp, "%d\n", FORMAT_QTY);
+    for (int i = 0; i < FORMAT_QTY; ++i)
+    {
+      if (i == 0) fprintf(fp, "%d", format[i]);
+      else fprintf(fp, ",%d", format[i]);
+    }
+    fprintf(fp, "\n");
+    fprintf(fp, "%f,%f\n", PH, PR);
+    printf("Archivo guardado correctamente en: %s\n", filename);
+    fclose(fp);
+  }else{
+    printf("Error al guardar el archivo\n");
+  }
+}
+
 void close_window(GtkWidget *widget, gpointer window)
 {
   gtk_widget_destroy(GTK_WIDGET(window));
@@ -192,7 +385,7 @@ void CSS(void)
   screen = gdk_display_get_default_screen (display);
   gtk_style_context_add_provider_for_screen (screen, GTK_STYLE_PROVIDER (provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
-  const gchar *cssFile = "custom.css";
+  const gchar *cssFile = "series.css";
   GError *error = 0;
   gtk_css_provider_load_from_file(provider, g_file_new_for_path(cssFile), &error);
   g_object_unref (provider);
@@ -212,111 +405,226 @@ void on_message_destroy()
   gtk_main_quit();
 }
 
-/* * * * * *
-   * Node  *
-   * * * * */
+/* * * * * * *
+   * Result  *
+   * * * * * */
 
-void on_add_node_btn_clicked(GtkWidget *widget, Widgets *data)
+void on_results_destroy(GtkWidget *widget, Widgets *data)
 {
-  int error = 0;
-  GtkBuilder *builder;
-  GtkWidget *accept;
-  GtkWidget *label;
-  char* input;
-  gchar* message;
-
-  builder = gtk_builder_new();
-  gtk_builder_add_from_file (builder, GLADE, NULL);
-
-  if (gtk_entry_get_text_length(GTK_ENTRY(data->text_box_2)))
+  if (data->table)
   {
-    input = gtk_entry_get_text(GTK_ENTRY(data->text_box_2));
-    for (int i = 0; i < NODES_QTY; ++i)
+    for (int i = 0; i < (GAMES_QTY + 3); ++i)
     {
-       if (strcmp(NODES[i],input) == 0)
-       {
-          error = 1;
-          break;
-       }
+      free(data->table[i]);
     }
-  }else
-  {
-    error = 2;
+    free(data->table);
+    data->table = NULL;
   }
-  if (error)
+  free(data);
+  data = NULL;
+  if (format)
   {
-    data->window = GTK_WIDGET(gtk_builder_get_object(builder, "message"));
-    gtk_builder_connect_signals(builder, NULL);
-    gtk_window_set_transient_for (data->window, data->parent);
-    accept = GTK_WIDGET(gtk_builder_get_object(builder, "message_ok_btn"));
-    g_signal_connect (G_OBJECT (accept), "clicked", G_CALLBACK (close_window), G_OBJECT (data->window));
-    label = GTK_WIDGET(gtk_builder_get_object(builder, "message_lbl"));
-    if (error == 1) message = "Error: Ya existe un nodo con ese nombre.";
-    else message = "Error: Ingrese un nombre para el nodo.";
-    gtk_label_set_text (GTK_LABEL(label), message);
-    g_object_unref(builder);
-    gtk_widget_show(data->window);
-    gtk_main(); 
-  }else
+    free(format);
+    format = NULL;
+  }
+  if (table)
   {
-    if (NODES_QTY == 0)
+    for (int i = 0; i < (GAMES_QTY + 1); ++i)
     {
-      alloc_nodes(1);
-      alloc_D(1);
+      free(table[i]);
+    }
+    free(table);
+    table = NULL;
+  }
+  gtk_main_quit();
+}
+
+void fill_result_table(Widgets* data, GtkWidget* column)
+{
+
+  data->table[0][1] = gtk_label_new(TEAMS[1]);
+  gtk_widget_set_name (data->table[0][1],"team_b_lbl");
+  gtk_grid_attach (GTK_GRID (column),data->table[0][1] , 1, 0, GAMES_QTY+2, 1);
+  data->table[1][0] = gtk_label_new(TEAMS[0]);
+  gtk_widget_set_name (data->table[1][0],"team_a_lbl");
+  gtk_grid_attach (GTK_GRID (column),data->table[1][0] , 0, 1, 1, GAMES_QTY+2);
+
+  char prob_a_house[100];
+  snprintf(prob_a_house, 100, "Casa : %s\n[%s : %.5f]\n[%s : %.5f]", TEAMS[0], TEAMS[0], PH, TEAMS[1], 1-PH);
+
+  char prob_b_house[100];
+  snprintf(prob_b_house, 100, "Casa : %s\n[%s : %.5f]\n[%s : %.5f]", TEAMS[1], TEAMS[0], PR, TEAMS[1], 1-PR);
+
+  for(int i = 1; i < (GAMES_QTY + 3); ++i) 
+  {
+    if (i != 1)
+    {
+
+      data->table[i][1] = gtk_entry_new();
+      gtk_widget_set_name (data->table[i][1],"entry");
+      gtk_entry_set_width_chars(GTK_ENTRY(data->table[i][1]),NUMBER_LEN);
+      gtk_editable_set_editable(GTK_ENTRY(data->table[i][1]),FALSE);
+      gtk_grid_attach (GTK_GRID (column),data->table[i][1] , 1, i, 1, 1);
+      char num[NUMBER_LEN];
+      snprintf(num, NUMBER_LEN, "%d", i-2);
+      gtk_entry_set_text (GTK_ENTRY(data->table[i][1]), num);
+
+      for(int j = 2; j < (GAMES_QTY + 3); ++j) 
+      {
+        if ((i != 2) || (j != 2))
+        {
+          data->table[i][j] = gtk_entry_new();
+
+          if ((i > 2) && (j > 2))
+          {
+            if (get_house(i-2, j-2) == 'A')
+            {
+              gtk_widget_set_tooltip_text(data->table[i][j], prob_a_house);
+              gtk_widget_set_name (data->table[i][j],"team_a_entry");
+            }
+            else
+            {
+              gtk_widget_set_tooltip_text(data->table[i][j], prob_b_house);
+              gtk_widget_set_name (data->table[i][j],"team_b_entry");
+            }
+          }else
+          {
+              gtk_widget_set_name (data->table[i][j],"entry");
+          }
+          
+          gtk_entry_set_width_chars(GTK_ENTRY(data->table[i][j]),FLOAT_LEN);
+          gtk_editable_set_editable(GTK_ENTRY(data->table[i][j]),FALSE);
+          gtk_grid_attach (GTK_GRID (column),data->table[i][j] , j, i, 1, 1);
+          char num[FLOAT_LEN];
+          snprintf(num, FLOAT_LEN, "%.5f", table[i-2][j-2]);
+          gtk_entry_set_text (GTK_ENTRY(data->table[i][j]), num);
+        }
+      }
+      
     }else
     {
-      realloc_nodes();
-      realloc_D();
+      for (int j = 2; j < (GAMES_QTY + 3); ++j)
+      {
+        data->table[i][j] = gtk_entry_new();
+        gtk_widget_set_name (data->table[i][j],"entry");
+        gtk_entry_set_width_chars(GTK_ENTRY(data->table[i][j]),NUMBER_LEN);
+        gtk_editable_set_editable(GTK_ENTRY(data->table[i][j]),FALSE);
+        gtk_grid_attach (GTK_GRID (column),data->table[i][j] , j, i, 1, 1);
+        char num[NUMBER_LEN];
+        snprintf(num, NUMBER_LEN, "%d", j-2);
+        gtk_entry_set_text (GTK_ENTRY(data->table[i][j]), num);
+      }
     }
-    strcpy(NODES[NODES_QTY++], input);
-    g_signal_connect (G_OBJECT (data->graph), "draw", G_CALLBACK (on_graph_draw), NULL);
-    char number[NUMBER_LEN];
-    snprintf(number, 10, "%d", NODES_QTY);
-    gtk_entry_set_text (GTK_ENTRY(data->text_box_1), number);
-    close_window(data->btn, data->parent);
+    
   }
-}
-
-void on_node_destroy(GtkWidget *widget, Widgets *data)
-{
-  free(data);
-  gtk_main_quit();
 }
 
 /* * * * * * *
-   * Edge *
+   * Format  *
    * * * * * */
 
-void on_add_edge_btn_clicked(GtkWidget *widget, Widgets *data)
+int all_games_selected(Widgets *data)
 {
-  int error = 0;
+  char previous = '0';
+  FORMAT_QTY = 1;
+  for (int i = 2; i < (BoN + 2); ++i)
+  {
+    if (gtk_toggle_button_get_active(data->table[i][1]))
+    {
+      if (previous == 'B')
+      {
+        FORMAT_QTY++;
+      }
+      previous = 'A';
+    }else if (gtk_toggle_button_get_active(data->table[i][2]))
+    {
+      if (previous == 'A' || previous == '0')
+      {
+        FORMAT_QTY++;
+      }
+      previous = 'B';
+    }else
+    {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+void set_format(Widgets *data)
+{
+  alloc_format();
+  int n = 0;
+  int j = 0;
+  char previous = '0';
+  for (int i = 2; i < (BoN + 2); ++i)
+  {
+    if (gtk_toggle_button_get_active(data->table[i][1]))
+    {
+      if (previous == 'B')
+      {
+        format[j++] = n;
+        n = 1;
+      }else
+      {
+        n++;
+      }
+      previous = 'A';
+    }else if (gtk_toggle_button_get_active(data->table[i][2]))
+    {
+      if (previous == 'A' || previous == '0')
+      {
+        format[j++] = n;
+        n = 1;
+      }else 
+      {
+        n++;
+      }
+      previous = 'B';
+    }
+  }
+  format[j] = n;
+}
+
+void on_accept_format_btn_clicked(GtkWidget *widget, Widgets *data)
+{
   GtkBuilder *builder;
   GtkWidget *accept;
+  GtkWidget *exit;
   GtkWidget *label;
-  char* input;
-  float weight;
-  gchar* message;
-  gchar *node1;
-  gchar *node2;
+  GtkWidget *pa_lbl;
+  GtkWidget *pb_lbl;
+  GtkWidget *format_tb;
+  GtkWidget *column;
+  GtkWidget *scroll;
+  GtkWidget *save;
+  GtkWidget *window;
+  gchar* message = NULL;
   builder = gtk_builder_new();
   gtk_builder_add_from_file (builder, GLADE, NULL);
 
-  if (gtk_entry_get_text_length(GTK_ENTRY(data->text_box_2)))
+  if (all_games_selected(data))
   {
-    input = gtk_entry_get_text(GTK_ENTRY(data->text_box_2));
-    weight = atof(input);
-    if (weight <= 0) error = 3;
-  }else error = 2;
-  
-  node1 = gtk_combo_box_text_get_active_text(data->cb_1);
-  node2 = gtk_combo_box_text_get_active_text(data->cb_2);
-  
-  if (strcmp(node1,node2) == 0)
-  {
-    error = 1;
-  }
+    set_format(data);
 
-  if (error)
+    alloc_table();
+
+    format_tb = GTK_WIDGET(gtk_builder_get_object(builder, "format_tb"));
+    char format_str[FORMAT_LEN];
+    char num[NUMBER_LEN];
+    snprintf(num, NUMBER_LEN, "%d", format[0]);
+    strcpy(format_str, num);
+    for (int i = 1; i < FORMAT_QTY; ++i)
+    {
+      char num_s[NUMBER_LEN];
+      snprintf(num_s, NUMBER_LEN, "-%d", format[i]);
+      strcat(format_str, num_s);
+    }
+    gtk_entry_set_text (GTK_ENTRY(format_tb), format_str);
+
+  }else message = "Falta seleccionar el equipo casa para uno o mas juegos.";
+
+  if (message)
   {
     data->window = GTK_WIDGET(gtk_builder_get_object(builder, "message"));
     gtk_builder_connect_signals(builder, NULL);
@@ -324,870 +632,161 @@ void on_add_edge_btn_clicked(GtkWidget *widget, Widgets *data)
     accept = GTK_WIDGET(gtk_builder_get_object(builder, "message_ok_btn"));
     g_signal_connect (G_OBJECT (accept), "clicked", G_CALLBACK (close_window), G_OBJECT (data->window));
     label = GTK_WIDGET(gtk_builder_get_object(builder, "message_lbl"));
-    if (error == 1) message = "Error: Nodos no pueden ser iguales.";
-    else if (error == 2) message = "Error: Ingrese un peso para la arista.";
-    else message = "Error: Peso no puede ser menor que 0";
     gtk_label_set_text (GTK_LABEL(label), message);
     g_object_unref(builder);
     gtk_widget_show(data->window);
-    gtk_main(); 
+    
   }else
   {
-    int i = get_index_from_table(node1);
-    int j = get_index_from_table(node2);
-    if (i != -1 && j != -1) D[i][j] = weight;
-    g_signal_connect (G_OBJECT (data->graph), "draw", G_CALLBACK (on_graph_draw), NULL);
-    close_window(data->btn, data->parent);
-  }
-}
-
-void on_edge_destroy(GtkWidget *widget, Widgets *data)
-{
-  free(data);
-  gtk_main_quit();
-}
-
-/* * * * * * *
-   * Routes  *
-   * * * * * */
-
-void find_optimal_route(int node1, int node2, char path [])
-{
-  char next[5] = " -> ";
-  int mid = P[node1][node2];
-
-  if (mid == 0)
-  {
-    strcat(path, next);
-    strcat(path, NODES[node2]);
-  }
-  else
-  {
-    strcat(path, next);
-    strcat(path, NODES[mid - 1]);
-    find_optimal_route(mid - 1, node2, path);
-  }
-}
-
-void on_calc_routes_btn_clicked(GtkWidget *widget, Widgets *data)
-{
-  gchar *node1;
-  gchar *node2;
-  node1 = gtk_combo_box_text_get_active_text(data->cb_1);
-  node2 = gtk_combo_box_text_get_active_text(data->cb_2);
-  
-  int n1 = -1;
-  int n2 = -1;
-  
-  for (int i = 0; (i < NODES_QTY) && ((n1 == -1) || (n2 == -1)); ++i)
-  {
-    if (n1 == -1)
-    {
-      if (strcmp(node1,NODES[i]) == 0) n1 = i;
-    }
-    if (n2 == -1)
-    {
-      if (strcmp(node2,NODES[i]) == 0) n2 = i;
-    }
-  }
-  char path[PATH_LEN];
-  snprintf(path, PATH_LEN, "Distancia: %f\nRuta: %s", D[n1][n2], NODES[n1]);
-  find_optimal_route(n1, n2, path);
-  gtk_text_buffer_set_text(data->buffer,path,-1);
-  gtk_widget_show_all(data->parent);
-}
-
-void on_routes_destroy(GtkWidget *widget, Widgets *data)
-{
-  free(data);
-  gtk_main_quit();
-}
-
-/* * * * * * * * *
-   * table_edit  *
-   * * * * * * * */
-
-void on_random_btn_clicked(GtkWidget *widget, Widgets *data)
-{
-  float number = 0.0;
-  for(int i = 1; i < (TEMP_NODES_QTY + 1); ++i) 
-  {
-    for(int j = 1; j < (TEMP_NODES_QTY + 1); ++j) 
-    {
-      if (i != j)
-      {
-        number = (float)((double)rand()/(double)(RAND_MAX)) * (float)(1<<10);
-        char snumber[NUMBER_LEN*2];
-        snprintf(snumber, NUMBER_LEN*2, "%f", number);
-        gtk_entry_set_text (GTK_ENTRY(data->table[i][j]), snumber);
-      }
-    }
-  }
-  gtk_widget_show_all(data->parent);
-}
-
-/* Funciones auxiliares de table_edit */
-
-int empty_node_entry(Widgets *data)
-{
-  for (int i = 1; i < (TEMP_NODES_QTY + 1); ++i)
-  {
-    if (!gtk_entry_get_text_length(GTK_ENTRY(data->table[0][i])))
-    {
-      return 1;
-    }
-  }
-  return 0;
-}
-
-int wrong_weight_entry(Widgets *data)
-{
-  float weight = 0;
-  for (int i = 1; i < (TEMP_NODES_QTY + 1); ++i)
-  {
-    for (int j = 1; j < (TEMP_NODES_QTY + 1); ++j)
-    {
-      if (i != j)
-      {
-        if ( gtk_entry_get_text_length( GTK_ENTRY(data->table[i][j]) ) )
-        {
-          char* input = gtk_entry_get_text(GTK_ENTRY(data->table[i][j]));
-          if (strcmp(input,"INF") != 0)
-          {
-            if ( isfloat(input) || isNumeric(input) )
-            {
-              weight = atof(input);
-              if (weight <= 0) return 1;
-            }else  return 1;
-          }
-        }else return 1;
-      }
-    }
-  }
-  return 0;
-}
-
-int same_node_entry(Widgets *data)
-{
-  for (int i = 1; i < (TEMP_NODES_QTY + 1); ++i)
-  {
-    for (int j = i + 1; j < (TEMP_NODES_QTY + 1); ++j)
-    {
-       if (strcmp(gtk_entry_get_text(GTK_ENTRY(data->table[0][i])), gtk_entry_get_text(GTK_ENTRY(data->table[0][j]))) == 0)
-       {
-         return 1;
-       }
-    }
-  }
-  return 0;
-}
-
-void assign_nodes(Widgets *data)
-{
-  for (int i = 1; i < (TEMP_NODES_QTY + 1); ++i)
-  {
-    char *no = gtk_entry_get_text(GTK_ENTRY(data->table[0][i]));
-    strcpy(NODES[i-1], no);
-  }
-}
-void assign_weights(Widgets *data)
-{
-  float weight = 0;
-  for (int i = 1; i < (TEMP_NODES_QTY + 1); ++i)
-  {
-    for (int j = 1; j < (TEMP_NODES_QTY + 1); ++j)
-    {
-      if (i != j)
-      {
-        char* input = gtk_entry_get_text(GTK_ENTRY(data->table[i][j]));
-        if (strcmp(input,"INF") != 0)
-        {
-          weight = atof(input);
-          D[i-1][j-1] = weight;
-        }else
-        {
-          D[i-1][j-1] = INF;
-        }
-      }
-    }
-  }
-}
-
-
-
-void on_table_edit_destroy(GtkWidget *widget, Widgets *data)
-{
-  for(int i = 0; i < (TEMP_NODES_QTY + 1); ++i)
-  {
-    free(data->table[i]);
-  }
-  free(data->table);
-  free(data);
-  gtk_main_quit();
-}
-
-/* * * * * * * * *
-   * table_view  *
-   * * * * * * * */
-
-void reset_table_colours(Widgets *data)
-{
-  for (int i = 0; i < NODES_QTY; ++i)
-  {
-    for (int j = 0; j < NODES_QTY; ++j)
-    {
-      gtk_widget_set_name (data->table[i+1][j+1],"entry");
-      gtk_widget_set_name (data->table_2[i+1][j+1],"entry");
-    }
-  }
-  
-}
-
-void on_next_btn_clicked(GtkWidget *widget, Widgets *data)
-{
-  GtkBuilder *builder;
-  GtkWidget *accept;
-  GtkWidget *label;
-  gchar* message;
-  builder = gtk_builder_new();
-  gtk_builder_add_from_file (builder, GLADE, NULL);
-
-  if (CURR_INDEX < NODES_QTY)
-  {
-    int i, j;
-    float t;
-
-    reset_table_colours(data);
-
-    char curr[NODES_QTY_LEN + 4];
-    snprintf(curr, NODES_QTY_LEN + 4, "D(%d)", CURR_INDEX+1);
-    gtk_label_set_text(data->lbl_1, curr);
-    curr[0] = 'P';
-    gtk_label_set_text(data->lbl_2, curr);
-
-    for (i = 0; i < NODES_QTY; ++i)
-    {
-      if (i != CURR_INDEX)
-      {
-        for (j = 0; j < NODES_QTY; ++j)
-        {
-          if ((j != CURR_INDEX) && (j != i))
-          {
-            t = D[i][CURR_INDEX] + D[CURR_INDEX][j];
-            if (t < D[i][j])
-            {
-              P[i][j] = CURR_INDEX+1;
-
-              char k[NODES_QTY_LEN];
-              snprintf(k, sizeof(k), "%d", P[i][j]);
-              gtk_entry_set_text (GTK_ENTRY(data->table_2[i+1][j+1]), k);
-
-              D[i][j] = t;
-
-              char weight[NODES_QTY_LEN];
-              snprintf(weight, sizeof(weight), "%.3f", t);
-              gtk_entry_set_text (GTK_ENTRY(data->table[i+1][j+1]), weight);
-
-              gtk_widget_set_name (data->table[i+1][j+1],"newVal");
-              gtk_widget_set_name (data->table_2[i+1][j+1],"newVal");
-            }
-          }
-        }
-      }
-    }
-    CURR_INDEX++;
-    
-    if (CURR_INDEX == NODES_QTY)
-    {
-      gtk_widget_set_sensitive(data->btn,FALSE);
-      gtk_widget_set_sensitive(data->btn_2,FALSE);
-      gtk_widget_set_sensitive(data->btn_3,TRUE);
-    }
-    gtk_widget_show_all(data->parent);
-  }
-}
-
-void on_last_btn_clicked(GtkWidget *widget, Widgets *data)
-{
-  if (CURR_INDEX < NODES_QTY)
-  {
-    int i, j;
-    float t;
-    
-    for (; CURR_INDEX < NODES_QTY; ++CURR_INDEX)
-    {
-      for (i = 0; i < NODES_QTY; ++i)
-      {
-        if (i != CURR_INDEX)
-        {
-          for (j = 0; j < NODES_QTY; ++j)
-          {
-            if ((j != CURR_INDEX) && (j != i))
-            {
-              t = D[i][CURR_INDEX] + D[CURR_INDEX][j];
-              if (t < D[i][j])
-              {
-                P[i][j] = CURR_INDEX+1;
-
-                char k[NODES_QTY_LEN];
-                snprintf(k, sizeof(k), "%d", P[i][j]);
-                gtk_entry_set_text (GTK_ENTRY(data->table_2[i+1][j+1]), k);
-
-                D[i][j] = t;
-
-                char weight[NODES_QTY_LEN];
-                snprintf(weight, sizeof(weight), "%.3f", t);
-                gtk_entry_set_text (GTK_ENTRY(data->table[i+1][j+1]), weight);
-              }
-            }
-          }
-        }
-      }
-    }
-    
-    char curr[NODES_QTY_LEN + 4];
-    snprintf(curr, NODES_QTY_LEN + 4, "D(%d)", CURR_INDEX);
-    gtk_label_set_text(data->lbl_1, curr);
-    curr[0] = 'P';
-    gtk_label_set_text(data->lbl_2, curr);
-    
-    gtk_widget_set_sensitive(data->btn,FALSE);
-    gtk_widget_set_sensitive(data->btn_2,FALSE);
-    gtk_widget_set_sensitive(data->btn_3,TRUE);
-    gtk_widget_show_all(data->parent);
-  }
-}
-
-void on_route_btn_clicked(GtkWidget *widget, Widgets *data)
-{
-  GtkBuilder *builder;
-  GtkWidget *exit;
-  GtkWidget *entry;
-  GtkWidget *window;
-  Widgets *widgets = (Widgets*)malloc(1 * sizeof(Widgets));
-
-  builder = gtk_builder_new();
-  gtk_builder_add_from_file (builder, GLADE, NULL);
-
-  window = GTK_WIDGET(gtk_builder_get_object(builder, "routes"));
-  g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (on_routes_destroy), widgets);
-
-  widgets->parent = window;
-  gtk_builder_connect_signals(builder, NULL);
-  
-  gtk_window_set_transient_for (widgets->parent, data->parent);
-  
-  widgets->cb_1 = GTK_WIDGET(gtk_builder_get_object(builder, "routes_node1_cb"));
-
-  widgets->cb_2 = GTK_WIDGET(gtk_builder_get_object(builder, "routes_node2_cb"));
-
-  for (int i = 0; i < NODES_QTY; ++i)
-  {
-    char id[NUMBER_LEN];
-    sprintf(id, "%d", i);
-    gtk_combo_box_text_append(widgets->cb_1, id, NODES[i]);
-    gtk_combo_box_text_append(widgets->cb_2, id, NODES[i]);
-  }
-  if (NODES_QTY > 0)
-  {
-    gtk_combo_box_set_active(widgets->cb_1, 0);
-    gtk_combo_box_set_active(widgets->cb_2, 0);
-  }
-
-  widgets->buffer = gtk_builder_get_object(builder, "route_text_buffer");
-
-  widgets->btn = GTK_WIDGET(gtk_builder_get_object(builder, "calc_routes_btn"));
-  g_signal_connect (G_OBJECT (widgets->btn), "clicked", G_CALLBACK (on_calc_routes_btn_clicked), widgets);
-
-  exit = GTK_WIDGET(gtk_builder_get_object(builder, "exit_routes_btn"));
-  g_signal_connect (G_OBJECT (exit), "clicked", G_CALLBACK (close_window), widgets->parent);
-  g_object_unref(builder);
- 
-  gtk_widget_show(widgets->parent);
-  gtk_main();
-}
-
-void on_table_view_destroy(GtkWidget *widget, Widgets *data)
-{
-  for(int i = 0; i < (NODES_QTY + 1); ++i)
-  {
-    free(data->table[i]);
-    free(data->table_2[i]);
-  }
-  free(data->table);
-  free(data->table_2);
-  free(data);
-
-  for (int i = 0; i < NODES_QTY; ++i)
-  {
-    free(P[i]);
-  }
-  free(P);
-
-  restore_d_values();
-  gtk_main_quit();
-}
-
-/* * * * * * *
-   * Display *
-   * * * * * */
-
-void fill_d_table(Widgets *data, GtkWidget *column, int type)
-{
-  for(int i = 0; i < (TEMP_NODES_QTY + 1); ++i) 
-  {
-    for(int j = 0; j < (TEMP_NODES_QTY + 1); ++j) 
-    {
-      if (i != 0 || j != 0)
-      {
-        /* INIT */
-        data->table[i][j] = gtk_entry_new();
-        gtk_widget_set_name (data->table[i][j],"entry");
-        gtk_entry_set_width_chars(GTK_ENTRY(data->table[i][j]),12);
-        if ( (type == 1) || (type == 2))
-        {
-          gtk_widget_set_sensitive(data->table[i][j],TRUE);
-          gtk_widget_set_tooltip_text(data->table[i][j],"INF : valor infinito");
-        }else if (type == 3)
-        {
-          gtk_editable_set_editable(GTK_ENTRY(data->table[i][j]),FALSE);
-        }
-        gtk_grid_attach (GTK_GRID (column),data->table[i][j] , j, i, 1, 1);
-        
-        /* FIRST ROW : NODES NAMES */
-        if (i == 0)
-        {
-          if (type == 1)
-          {
-            char node_name[NODE_LEN];
-            get_node_name(j-1, node_name);
-            gtk_entry_set_text (GTK_ENTRY(data->table[i][j]), node_name);
-          } else
-          {
-            gtk_entry_set_text(GTK_ENTRY(data->table[i][j]),NODES[j-1]);
-          }
-        /* FIRST COL : NODES NAMES */
-        }else if (j == 0)
-        {
-          if ((type == 1) || (type == 2)) gtk_widget_set_sensitive(data->table[i][j], FALSE);
-          if (type == 1)
-          {
-            char node_name[NODE_LEN];
-            get_node_name(i-1, node_name);
-            gtk_entry_set_text (GTK_ENTRY(data->table[i][j]), node_name);
-          } else
-          {
-            gtk_entry_set_text(GTK_ENTRY(data->table[i][j]),NODES[i-1]);
-          }
-        /* DIAGONAL : DIRECT : 0 */
-        }else if (i == j)
-        {
-          gtk_entry_set_text (GTK_ENTRY(data->table[i][j]),"0");
-          gtk_widget_set_sensitive(data->table[i][j], FALSE);
-        /* REST */
-        }else
-        {
-          if (type == 1)
-          {
-            gtk_entry_set_text (GTK_ENTRY(data->table[i][j]),"INF");
-          } else
-          {
-            if (D[i-1][j-1] == INF)
-            {
-              gtk_entry_set_text (GTK_ENTRY(data->table[i][j]), "INF");
-            }else
-            {
-              char weight[NODES_QTY_LEN];
-              snprintf(weight, sizeof(weight), "%.3f", D[i-1][j-1]);
-              gtk_entry_set_text (GTK_ENTRY(data->table[i][j]), weight);
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-void fill_p_table(Widgets *data, GtkWidget *column)
-{
-  for(int i = 0; i < (TEMP_NODES_QTY + 1); ++i) 
-  {
-    for(int j = 0; j < (TEMP_NODES_QTY + 1); ++j) 
-    {
-      if (i != 0 || j != 0)
-      {
-        /* INIT */
-        data->table_2[i][j] = gtk_entry_new();
-        gtk_widget_set_name (data->table_2[i][j],"entry");
-        gtk_entry_set_width_chars(GTK_ENTRY(data->table_2[i][j]),12);
-        gtk_editable_set_editable(GTK_ENTRY(data->table_2[i][j]),FALSE);
-        gtk_grid_attach (GTK_GRID (column),data->table_2[i][j] , j, i, 1, 1);
-        
-        /* FIRST ROW : NODES NAMES */
-        if (i == 0)
-        {
-          gtk_entry_set_text(GTK_ENTRY(data->table_2[i][j]),NODES[j-1]);
-        /* FIRST COL : NODES NAMES */
-        }else if (j == 0)
-        {
-          gtk_entry_set_text(GTK_ENTRY(data->table_2[i][j]),NODES[i-1]);
-        /* DIAGONAL : DIRECT : 0 */
-        }else
-        {
-          char weight[NODES_QTY_LEN];
-          snprintf(weight, sizeof(weight), "%d", P[i-1][j-1]);
-          gtk_entry_set_text (GTK_ENTRY(data->table_2[i][j]), weight);
-        }
-      }
-    }
-  }
-}
-
-void on_new_btn_clicked(GtkWidget *widget, Widgets *data)
-{
-  int error = 1;
-  GtkBuilder *builder;
-  GtkWidget *window;
-  GtkWidget *accept;
-  GtkWidget *cancel;
-  GtkWidget *label;
-  GtkWidget *random;
-  GtkWidget *column;
-  GtkWidget *scroll;
-
-  builder = gtk_builder_new();
-  gtk_builder_add_from_file (builder, GLADE, NULL);
-
-  if (gtk_entry_get_text_length(GTK_ENTRY(data->text_box_1)))
-  {
-    TEMP_NODES_QTY = (int) strtol(gtk_entry_get_text(GTK_ENTRY(data->text_box_1)), (char **)NULL, 10);
-    if (TEMP_NODES_QTY > 0)
-    {
-      Widgets *widgets = (Widgets*)malloc(1 * sizeof(Widgets));
-      window = GTK_WIDGET(gtk_builder_get_object(builder, "table_edit"));
-      g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (on_table_edit_destroy), widgets);
-      widgets->parent = window;
-      gtk_builder_connect_signals(builder, NULL);
-      gtk_window_set_transient_for (widgets->parent, data->parent);
-
-      widgets->graph = data->graph;
-      widgets->text_box_2 = GTK_WIDGET(gtk_builder_get_object(builder, "nodes_display_tb"));
-
-      widgets->btn = GTK_WIDGET(gtk_builder_get_object(builder, "accept_btn"));
-      g_signal_connect (G_OBJECT (widgets->btn), "clicked", G_CALLBACK (on_accept_btn_clicked), widgets);
-
-      widgets->btn_2 = GTK_WIDGET(gtk_builder_get_object(builder, "random_btn"));
-      g_signal_connect (G_OBJECT (widgets->btn_2), "clicked", G_CALLBACK (on_random_btn_clicked), widgets);
-
-      cancel = GTK_WIDGET(gtk_builder_get_object(builder, "cancel_btn"));
-      g_signal_connect (G_OBJECT (cancel), "clicked", G_CALLBACK (close_window), widgets->parent);
-      scroll = GTK_WIDGET(gtk_builder_get_object(builder, "table_edit_scrolled"));
-
-      widgets->table = calloc(TEMP_NODES_QTY + 1, sizeof(GtkWidget**));
-
-      for(int i = 0; i < (TEMP_NODES_QTY + 1); ++i)
-      {
-        widgets->table[i] = calloc(TEMP_NODES_QTY + 1, sizeof(GtkWidget*));
-      }
-
-      column = gtk_grid_new ();
-      gtk_container_add (GTK_CONTAINER (scroll), column);
-
-      fill_d_table(widgets, column, 1);
-      error = 0;
-    }
-  }
-  
-  if (error)
-  {
-    window = GTK_WIDGET(gtk_builder_get_object(builder, "message"));
-    gtk_window_set_transient_for (window, data->parent);
-    gtk_builder_connect_signals(builder, NULL);
-    accept = GTK_WIDGET(gtk_builder_get_object(builder, "message_ok_btn"));
-    g_signal_connect (G_OBJECT (accept), "clicked", G_CALLBACK (close_window), G_OBJECT (window));
-    label = GTK_WIDGET(gtk_builder_get_object(builder, "message_lbl"));
-    const gchar* message = "Ingrese una cantidad de nodos mayor a 0.";
-    gtk_label_set_text (GTK_LABEL(label), message);
-  }				  
-  g_object_unref(builder);
-  gtk_widget_show_all(window);
-  gtk_main();
-}
-
-void on_calc_btn_clicked(GtkWidget *widget, Widgets *data)
-{
-  GtkBuilder *builder;
-  GtkWidget *window;
-  GtkWidget *accept;
-  GtkWidget *exit;
-  GtkWidget *label;
-  GtkWidget *column_D;
-  GtkWidget *column_P;
-  GtkWidget *scroll_D;
-  GtkWidget *scroll_P;
-
-  builder = gtk_builder_new();
-  gtk_builder_add_from_file (builder, GLADE, NULL);
-
-  if (NODES_QTY)
-  {
-    TEMP_NODES_QTY = NODES_QTY; /* fill_d_table and fill_p_table uses TEMP_NODES_QTY */
-    CURR_INDEX = 0;
     Widgets *widgets = (Widgets*)malloc(1 * sizeof(Widgets));
-    window = GTK_WIDGET(gtk_builder_get_object(builder, "table_view"));
-    g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (on_table_view_destroy), widgets);
+
+    window = GTK_WIDGET(gtk_builder_get_object(builder, "results"));
+    g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (on_results_destroy), widgets);
     widgets->parent = window;
     gtk_builder_connect_signals(builder, NULL);
     gtk_window_set_transient_for (widgets->parent, data->parent);
 
-    widgets->btn = GTK_WIDGET(gtk_builder_get_object(builder, "next_btn"));
-    g_signal_connect (G_OBJECT (widgets->btn), "clicked", G_CALLBACK (on_next_btn_clicked), widgets);
+    scroll = GTK_WIDGET(gtk_builder_get_object(builder, "results_scrolled"));
 
-    widgets->btn_2 = GTK_WIDGET(gtk_builder_get_object(builder, "last_btn"));
-    g_signal_connect (G_OBJECT (widgets->btn_2), "clicked", G_CALLBACK (on_last_btn_clicked), widgets);
-
-    widgets->btn_3 = GTK_WIDGET(gtk_builder_get_object(builder, "route_btn"));
-    g_signal_connect (G_OBJECT (widgets->btn_3), "clicked", G_CALLBACK (on_route_btn_clicked), widgets);
-    gtk_widget_set_sensitive(widgets->btn_3,FALSE);
-
-    exit = GTK_WIDGET(gtk_builder_get_object(builder, "exit_table_view_btn"));
-    g_signal_connect (G_OBJECT (exit), "clicked", G_CALLBACK (close_window), widgets->parent);
-
-    widgets->lbl_1 = GTK_WIDGET(gtk_builder_get_object(builder, "d_table"));
-    widgets->lbl_2 = GTK_WIDGET(gtk_builder_get_object(builder, "p_table"));
-    gtk_label_set_text(widgets->lbl_1, "D(0)");
-    gtk_label_set_text(widgets->lbl_2, "P(0)");
-
-    scroll_D = GTK_WIDGET(gtk_builder_get_object(builder, "table_view_d_scrolled"));
-    scroll_P = GTK_WIDGET(gtk_builder_get_object(builder, "table_view_p_scrolled"));
-
-    widgets->table = calloc(TEMP_NODES_QTY + 1, sizeof(GtkWidget**));
-    widgets->table_2 = calloc(TEMP_NODES_QTY + 1, sizeof(GtkWidget**));
-
-    for(int i = 0; i < (TEMP_NODES_QTY + 1); ++i)
+    widgets->table = calloc(GAMES_QTY + 3, sizeof(GtkWidget**));
+    for(int i = 0; i < (GAMES_QTY + 3); ++i)
     {
-      widgets->table[i] = calloc(TEMP_NODES_QTY + 1, sizeof(GtkWidget*));
-      widgets->table_2[i] = calloc(TEMP_NODES_QTY + 1, sizeof(GtkWidget*));
+      widgets->table[i] = calloc((GAMES_QTY + 3), sizeof(GtkWidget*));
     }
-
-    column_D = gtk_grid_new ();
-    gtk_container_add (GTK_CONTAINER (scroll_D), column_D);
-
-    column_P = gtk_grid_new ();
-    gtk_container_add (GTK_CONTAINER (scroll_P), column_P);
-
-    fill_d_table(widgets, column_D, 3);
-    backup_d_values();
-
-    alloc_P(NODES_QTY);
-    fill_p_table(widgets, column_P);
-
-  }else
-  {
-    window = GTK_WIDGET(gtk_builder_get_object(builder, "message"));
-    gtk_builder_connect_signals(builder, NULL);
-    accept = GTK_WIDGET(gtk_builder_get_object(builder, "message_ok_btn"));
-    g_signal_connect (G_OBJECT (accept), "clicked", G_CALLBACK (close_window), G_OBJECT (window));
-    label = GTK_WIDGET(gtk_builder_get_object(builder, "message_lbl"));
-    const gchar* message = "Se necesita crear o cargar un grafo primero.";
-    gtk_label_set_text (GTK_LABEL(label), message);
-  }
-				  
-  g_object_unref(builder);
-  gtk_widget_show_all(window);
-  gtk_main();
-}
-
-void on_edit_btn_clicked(GtkWidget *widget, Widgets *data)
-{
-  GtkBuilder *builder;
-  GtkWidget *window;
-  GtkWidget *accept;
-  GtkWidget *cancel;
-  GtkWidget *label;
-  GtkWidget *random;
-  GtkWidget *column;
-  GtkWidget *scroll;
-
-  builder = gtk_builder_new();
-  gtk_builder_add_from_file (builder, GLADE, NULL);
-
-  if (NODES_QTY)
-  {
-    Widgets *widgets = (Widgets*)malloc(1 * sizeof(Widgets));
-    TEMP_NODES_QTY = NODES_QTY;
-    window = GTK_WIDGET(gtk_builder_get_object(builder, "table_edit"));
-    g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (on_table_edit_destroy), widgets);
-    widgets->parent = window;
-    gtk_builder_connect_signals(builder, NULL);
-    gtk_window_set_transient_for (widgets->parent, data->parent);
-
-    widgets->graph = data->graph;
-    widgets->text_box_2 = GTK_WIDGET(gtk_builder_get_object(builder, "nodes_display_tb"));
-
-    widgets->btn = GTK_WIDGET(gtk_builder_get_object(builder, "accept_btn"));
-    g_signal_connect (G_OBJECT (widgets->btn), "clicked", G_CALLBACK (on_accept_btn_clicked), widgets);
-
-    widgets->btn_2 = GTK_WIDGET(gtk_builder_get_object(builder, "random_btn"));
-    g_signal_connect (G_OBJECT (widgets->btn_2), "clicked", G_CALLBACK (on_random_btn_clicked), widgets);
-
-    cancel = GTK_WIDGET(gtk_builder_get_object(builder, "cancel_btn"));
-    g_signal_connect (G_OBJECT (cancel), "clicked", G_CALLBACK (close_window), widgets->parent);
-    scroll = GTK_WIDGET(gtk_builder_get_object(builder, "table_edit_scrolled"));
-
-    widgets->table = calloc(TEMP_NODES_QTY + 1, sizeof(GtkWidget**));
-
-    for(int i = 0; i < (TEMP_NODES_QTY + 1); ++i)
-    {
-      widgets->table[i] = calloc(TEMP_NODES_QTY + 1, sizeof(GtkWidget*));
-    }
-
     column = gtk_grid_new ();
     gtk_container_add (GTK_CONTAINER (scroll), column);
+    fill_result_table(widgets, column);
 
-    fill_d_table(widgets, column, 2);
-  }else
-  {
-    window = GTK_WIDGET(gtk_builder_get_object(builder, "message"));
-    gtk_window_set_transient_for (window, data->parent);
-    gtk_builder_connect_signals(builder, NULL);
-    accept = GTK_WIDGET(gtk_builder_get_object(builder, "message_ok_btn"));
-    g_signal_connect (G_OBJECT (accept), "clicked", G_CALLBACK (close_window), G_OBJECT (window));
-    label = GTK_WIDGET(gtk_builder_get_object(builder, "message_lbl"));
-    const gchar* message = "Se necesita crear o cargar un grafo primero.";
-    gtk_label_set_text (GTK_LABEL(label), message);
-  }				  
-  g_object_unref(builder);
-  gtk_widget_show_all(window);
+    char pa_str[100];
+    strcpy(pa_str, "La probabilidad de ");
+    strcat(pa_str, TEAMS[0]);
+    strcat(pa_str, " de ganar es de: ");
+    char pa[FLOAT_LEN];
+    snprintf(pa, FLOAT_LEN, "%.7f", table[GAMES_QTY][GAMES_QTY]);
+    strcat(pa_str, pa);
+
+    pa_lbl = GTK_WIDGET(gtk_builder_get_object(builder, "pa_lbl"));
+    gtk_label_set_text (GTK_LABEL(pa_lbl), pa_str);
+
+
+    char pb_str[100];
+    strcpy(pb_str, "La probabilidad de ");
+    strcat(pb_str, TEAMS[1]);
+    strcat(pb_str, " de ganar es de: ");
+    char pb[FLOAT_LEN];
+    snprintf(pb, FLOAT_LEN, "%.7f", 1-table[GAMES_QTY][GAMES_QTY]);
+    strcat(pb_str, pb);
+
+    pb_lbl = GTK_WIDGET(gtk_builder_get_object(builder, "pb_lbl"));
+    gtk_label_set_text (GTK_LABEL(pb_lbl), pb_str);
+
+    save = GTK_WIDGET(gtk_builder_get_object(builder, "menu_save"));
+    g_signal_connect(G_OBJECT(save), "button-press-event", G_CALLBACK(on_menu_save_as_button_press_event), widgets);
+
+    exit = GTK_WIDGET(gtk_builder_get_object(builder, "exit_results_btn"));
+    g_signal_connect (G_OBJECT (exit), "clicked", G_CALLBACK (close_window), widgets->parent);
+    g_object_unref(builder);
+    gtk_widget_show_all(widgets->parent);
+  }
+  
   gtk_main();
 }
 
-void on_edge_btn_clicked(GtkWidget *widget, Widgets *data)
+void on_format_destroy(GtkWidget *widget, Widgets *data)
 {
-  GtkBuilder *builder;
-  GtkWidget *cancel;
-  GtkWidget *entry;
-  GtkWidget *window;
-  Widgets *widgets = (Widgets*)malloc(1 * sizeof(Widgets));
-
-  builder = gtk_builder_new();
-  gtk_builder_add_from_file (builder, GLADE, NULL);
-
-  window = GTK_WIDGET(gtk_builder_get_object(builder, "edge"));
-  g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (on_edge_destroy), widgets);
-
-  widgets->parent = window;
-  gtk_builder_connect_signals(builder, NULL);
-  
-  gtk_window_set_transient_for (widgets->parent, data->parent);
-  
-  widgets->cb_1 = GTK_WIDGET(gtk_builder_get_object(builder, "edge_node1_cb"));
-
-  widgets->cb_2 = GTK_WIDGET(gtk_builder_get_object(builder, "edge_node2_cb"));
-
-  for (int i = 0; i < NODES_QTY; ++i)
+  if (data->table)
   {
-    char id[NUMBER_LEN];
-    sprintf(id, "%d", i);
-    gtk_combo_box_text_append(widgets->cb_1, id, NODES[i]);
-    gtk_combo_box_text_append(widgets->cb_2, id, NODES[i]);
+    for (int i = 0; i < (BoN + 2); ++i)
+    {
+      free(data->table[i]);
+    }
+    free(data->table);
+    data->table = NULL;
   }
-  if (NODES_QTY > 0)
-  {
-    gtk_combo_box_set_active(widgets->cb_1, 0);
-    gtk_combo_box_set_active(widgets->cb_2, 0);
-  }
-
-  widgets->graph = data->graph;
-  widgets->text_box_2 = GTK_WIDGET(gtk_builder_get_object(builder, "weight_tb"));
-
-  widgets->btn = GTK_WIDGET(gtk_builder_get_object(builder, "add_edge_btn"));
-  g_signal_connect (G_OBJECT (widgets->btn), "clicked", G_CALLBACK (on_add_edge_btn_clicked), widgets);
-
-  cancel = GTK_WIDGET(gtk_builder_get_object(builder, "exit_edge_btn"));
-  g_signal_connect (G_OBJECT (cancel), "clicked", G_CALLBACK (close_window), widgets->parent);
-  g_object_unref(builder);
- 
-  gtk_widget_show(widgets->parent);
-  gtk_main();
-}
-
-void on_node_btn_clicked(GtkWidget *widget, Widgets *data)
-{
-
-  GtkBuilder *builder;
-  GtkWidget *cancel;
-  GtkWidget *entry;
-  GtkWidget *window;
-  Widgets *widgets = (Widgets*)malloc(1 * sizeof(Widgets));
-
-  builder = gtk_builder_new();
-  gtk_builder_add_from_file (builder, GLADE, NULL);
-
-  window = GTK_WIDGET(gtk_builder_get_object(builder, "node"));
-  g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (on_node_destroy), widgets);
-
-  widgets->parent = window;
-  gtk_builder_connect_signals(builder, NULL);
-  
-  gtk_window_set_transient_for (widgets->parent, data->parent);
-  
-  widgets->graph = data->graph;
-  widgets->text_box_1 = data->text_box_1;
-  widgets->text_box_2 = GTK_WIDGET(gtk_builder_get_object(builder, "node_tb"));
-
-  widgets->btn = GTK_WIDGET(gtk_builder_get_object(builder, "add_node_btn"));
-  g_signal_connect (G_OBJECT (widgets->btn), "clicked", G_CALLBACK (on_add_node_btn_clicked), widgets);
-
-  cancel = GTK_WIDGET(gtk_builder_get_object(builder, "exit_node_btn"));
-  g_signal_connect (G_OBJECT (cancel), "clicked", G_CALLBACK (close_window), widgets->parent);
-  g_object_unref(builder);
- 
-  gtk_widget_show(widgets->parent);
-  gtk_main();
+  free(data);
+  data = NULL;
+  gtk_main_quit();
 }
 
 /* * * * * * *
    * Config  *
    * * * * * */
-   
+
+void fill_format_table(Widgets* data, GtkWidget* column)
+{
+
+  data->table[0][0] = gtk_label_new("Juego #");
+  gtk_grid_attach (GTK_GRID (column),data->table[0][0] , 0, 0, 1, 1);
+  data->table[0][1] = gtk_label_new("Equipo Casa");
+  gtk_grid_attach (GTK_GRID (column),data->table[0][1] , 1, 0, 2, 1);
+
+  data->table[1][1] = gtk_entry_new();
+  gtk_widget_set_name (data->table[1][1], "team_a_name");
+  gtk_entry_set_width_chars(GTK_ENTRY(data->table[1][1]),12);
+  gtk_editable_set_editable(GTK_ENTRY(data->table[1][1]),FALSE);
+  gtk_entry_set_text (GTK_ENTRY(data->table[1][1]), TEAMS[0]);
+  gtk_grid_attach (GTK_GRID (column),data->table[1][1] , 1, 1, 1, 1);
+  data->table[1][2] = gtk_entry_new();
+  gtk_widget_set_name (data->table[1][2],"team_b_name");
+  gtk_entry_set_width_chars(GTK_ENTRY(data->table[1][2]),12);
+  gtk_editable_set_editable(GTK_ENTRY(data->table[1][2]),FALSE);
+  gtk_entry_set_text (GTK_ENTRY(data->table[1][2]), TEAMS[1]);
+  gtk_grid_attach (GTK_GRID (column),data->table[1][2] , 2, 1, 1, 1);
+
+  for(int i = 2; i < (BoN + 2); ++i) 
+  {
+    char num[NUMBER_LEN];
+    snprintf(num, NUMBER_LEN, "%d", i-1);
+    data->table[i][0] = gtk_label_new(num);
+    gtk_widget_set_name (data->table[i][0],"entry");
+    gtk_grid_attach (GTK_GRID (column),data->table[i][0] , 0, i, 1, 1);
+
+    for(int j = 1; j < 3; ++j) 
+    {
+        if (j == 1) data->table[i][1] = gtk_radio_button_new(NULL);
+        else data->table[i][j] = gtk_radio_button_new_from_widget(data->table[i][1]);
+
+        gtk_grid_attach (GTK_GRID (column),data->table[i][j] , j, i, 1, 1);
+    }
+  }
+}
+
 void on_accept_config_btn_clicked(GtkWidget *widget, Widgets *data)
 {
-  int error = 0;
   GtkBuilder *builder;
+  GtkWidget *window;
   GtkWidget *accept;
   GtkWidget *exit;
   GtkWidget *label;
   GtkWidget *team_a;
   GtkWidget *team_b;
+  GtkWidget *column;
+  GtkWidget *scroll;
   gchar* message = NULL;
   char* team_A_name;
   char* team_B_name;
   builder = gtk_builder_new();
   gtk_builder_add_from_file (builder, GLADE, NULL);
 
-  if (gtk_entry_get_text_length(GTK_ENTRY(data->tb_1)))
+  BoN = gtk_spin_button_get_value_as_int(data->sb_1);
+  if (BoN <= 0)
   {
-    if (isNumeric(data->tb_1))
-    {
-      BoN = (int) strtol(gtk_entry_get_text(GTK_ENTRY(data->tb_1)), (char **)NULL, 10);
-      if (BoN <= 0) message = "Cantidad de juegos tiene que ser superior a 0.";
-    }else message = "Valor ingresado para la cantidad de juegos no es un valor numerico.";
-  }else message = "No ingreso la cantidad de juegos en la serie";
+    message = "Cantidad de juegos tiene que ser superior a 0.";
+  }
 
   if (!message)
   {
-    if (gtk_entry_get_text_length(GTK_ENTRY(data->tb_2)))
+    if (gtk_entry_get_text_length(GTK_ENTRY(data->tb_1)))
     {
-      team_A_name = gtk_entry_get_text(GTK_ENTRY(data->tb_2));
+      team_A_name = gtk_entry_get_text(GTK_ENTRY(data->tb_1));
     }else message = "Ingrese un nombre para el equipo A";
   }
 
   if (!message)
   {
-    if (gtk_entry_get_text_length(GTK_ENTRY(data->tb_3)))
+    if (gtk_entry_get_text_length(GTK_ENTRY(data->tb_2)))
     {
-      team_B_name = gtk_entry_get_text(GTK_ENTRY(data->tb_3));
+      team_B_name = gtk_entry_get_text(GTK_ENTRY(data->tb_2));
     }else message = "Ingrese un nombre para el equipo B";
   }
 
@@ -1206,7 +805,13 @@ void on_accept_config_btn_clicked(GtkWidget *widget, Widgets *data)
   }else
   {
     Widgets *widgets = (Widgets*)malloc(1 * sizeof(Widgets));
-    clear();
+    widgets->table = NULL;
+    if (TEAMS)
+    {
+      free(TEAMS[0]);
+      free(TEAMS[1]);
+      free(TEAMS);
+    }
     alloc_teams();
     strcpy(TEAMS[0], team_A_name);
     strcpy(TEAMS[1], team_B_name);
@@ -1222,13 +827,25 @@ void on_accept_config_btn_clicked(GtkWidget *widget, Widgets *data)
     team_b = GTK_WIDGET(gtk_builder_get_object(builder, "team_b_format_lbl"));
     gtk_label_set_text (GTK_LABEL(team_b), TEAMS[1]);
 
-    widgets->btn = GTK_WIDGET(gtk_builder_get_object(builder, "accept_format_btn"));
-    g_signal_connect (G_OBJECT (widgets->btn), "clicked", G_CALLBACK (on_accept_format_btn_clicked), widgets);
+    calculate_games();
 
-    exit = GTK_WIDGET(gtk_builder_get_object(builder, "exit_format_btn"));
+    scroll = GTK_WIDGET(gtk_builder_get_object(builder, "format_scrolled"));
+    widgets->table = calloc(BoN + 2, sizeof(GtkWidget**));
+    for(int i = 0; i < (BoN + 2); ++i)
+    {
+      widgets->table[i] = calloc(3, sizeof(GtkWidget*));
+    }
+    column = gtk_grid_new();
+    gtk_container_add (GTK_CONTAINER (scroll), column);
+    fill_format_table(widgets, column);
+
+    widgets->btn_1 = GTK_WIDGET(gtk_builder_get_object(builder, "accept_format_btn"));
+    g_signal_connect (G_OBJECT (widgets->btn_1), "clicked", G_CALLBACK (on_accept_format_btn_clicked), widgets);
+
+    exit = GTK_WIDGET(gtk_builder_get_object(builder, "cancel_format_btn"));
     g_signal_connect (G_OBJECT (exit), "clicked", G_CALLBACK (close_window), widgets->parent);
     g_object_unref(builder);
-    gtk_widget_show(widgets->parent);
+    gtk_widget_show_all(widgets->parent);
   }
   
   gtk_main();
@@ -1236,8 +853,24 @@ void on_accept_config_btn_clicked(GtkWidget *widget, Widgets *data)
 
 void on_config_destroy(GtkWidget *widget, Widgets *data)
 {
+  if (data->table)
+  {
+    for (int i = 0; i < (BoN + 1); ++i)
+    {
+      free(data->table[i]);
+    }
+    free(data->table);
+    data->table = NULL;
+  }
   free(data);
-  clear();
+  data = NULL;
+  if (TEAMS)
+  {
+    free(TEAMS[0]);
+    free(TEAMS[1]);
+    free(TEAMS);
+    TEAMS = NULL;
+  }
   gtk_main_quit();
 }
 
@@ -1258,6 +891,132 @@ void on_about_destroy()
 /* * * * * * * *
    * Menu Bar  *
    * * * * * * */
+
+void fast_load(Widgets *data)
+{
+  GtkBuilder *builder;
+  GtkWidget *accept;
+  GtkWidget *exit;
+  GtkWidget *label;
+  GtkWidget *pa_lbl;
+  GtkWidget *pb_lbl;
+  GtkWidget *format_tb;
+  GtkWidget *column;
+  GtkWidget *scroll;
+  GtkWidget *window;
+  GtkWidget *save;
+  gchar* message = NULL;
+  builder = gtk_builder_new();
+  gtk_builder_add_from_file (builder, GLADE, NULL);
+  
+  alloc_table();
+
+  format_tb = GTK_WIDGET(gtk_builder_get_object(builder, "format_tb"));
+  char format_str[FORMAT_LEN];
+  char num[NUMBER_LEN];
+  snprintf(num, NUMBER_LEN, "%d", format[0]);
+  strcpy(format_str, num);
+  for (int i = 1; i < FORMAT_QTY; ++i)
+  {
+    char num_s[NUMBER_LEN];
+    snprintf(num_s, NUMBER_LEN, "-%d", format[i]);
+    strcat(format_str, num_s);
+  }
+  gtk_entry_set_text (GTK_ENTRY(format_tb), format_str);
+
+  Widgets *widgets = (Widgets*)malloc(1 * sizeof(Widgets));
+
+  window = GTK_WIDGET(gtk_builder_get_object(builder, "results"));
+  g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (on_results_destroy), widgets);
+  widgets->parent = window;
+  gtk_builder_connect_signals(builder, NULL);
+  gtk_window_set_transient_for (widgets->parent, data->parent);
+
+  scroll = GTK_WIDGET(gtk_builder_get_object(builder, "results_scrolled"));
+
+  widgets->table = calloc(GAMES_QTY + 3, sizeof(GtkWidget**));
+  for(int i = 0; i < (GAMES_QTY + 3); ++i)
+  {
+    widgets->table[i] = calloc((GAMES_QTY + 3), sizeof(GtkWidget*));
+  }
+  column = gtk_grid_new ();
+  gtk_container_add (GTK_CONTAINER (scroll), column);
+  fill_result_table(widgets, column);
+
+  char pa_str[100];
+  strcpy(pa_str, "La probabilidad de ");
+  strcat(pa_str, TEAMS[0]);
+  strcat(pa_str, " de ganar es de: ");
+  char pa[FLOAT_LEN];
+  snprintf(pa, FLOAT_LEN, "%.7f", table[GAMES_QTY][GAMES_QTY]);
+  strcat(pa_str, pa);
+
+  pa_lbl = GTK_WIDGET(gtk_builder_get_object(builder, "pa_lbl"));
+  gtk_label_set_text (GTK_LABEL(pa_lbl), pa_str);
+
+
+  char pb_str[100];
+  strcpy(pb_str, "La probabilidad de ");
+  strcat(pb_str, TEAMS[1]);
+  strcat(pb_str, " de ganar es de: ");
+  char pb[FLOAT_LEN];
+  snprintf(pb, FLOAT_LEN, "%.7f", 1-table[GAMES_QTY][GAMES_QTY]);
+  strcat(pb_str, pb);
+
+  pb_lbl = GTK_WIDGET(gtk_builder_get_object(builder, "pb_lbl"));
+  gtk_label_set_text (GTK_LABEL(pb_lbl), pb_str);
+
+  save = GTK_WIDGET(gtk_builder_get_object(builder, "menu_save"));
+  g_signal_connect(G_OBJECT(save), "button-press-event", G_CALLBACK(on_menu_save_as_button_press_event), widgets);
+
+  exit = GTK_WIDGET(gtk_builder_get_object(builder, "exit_results_btn"));
+  g_signal_connect (G_OBJECT (exit), "clicked", G_CALLBACK (close_window), widgets->parent);
+
+  g_object_unref(builder);
+  gtk_widget_show_all(widgets->parent);
+  
+  gtk_main();
+}
+
+void on_menu_open_button_press_event(GtkWidget *widget, Widgets *data)
+{
+  GtkWidget *dialog;
+  dialog = gtk_file_chooser_dialog_new("Open File", NULL, GTK_FILE_CHOOSER_ACTION_OPEN, "_Cancel", 
+          GTK_RESPONSE_CANCEL, "_Open", GTK_RESPONSE_ACCEPT, NULL);
+ LOADED = 0;
+  if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
+  {
+    char *filename;
+    filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+    loadFileBetter(filename);
+  }
+  gtk_widget_destroy (dialog);
+  if (LOADED != -1)
+  {
+    fast_load(data);
+  }
+}
+
+void on_menu_save_as_button_press_event()
+{
+  GtkWidget *dialog;
+  GtkFileChooser *chooser;
+  GtkTextBuffer *buffer;
+  GtkTextIter start, end;
+  gchar * text;
+  dialog = gtk_file_chooser_dialog_new ("Save File", NULL, GTK_FILE_CHOOSER_ACTION_SAVE, "_Cancel",
+          GTK_RESPONSE_CANCEL, "_Save",  GTK_RESPONSE_ACCEPT, NULL);
+  chooser = GTK_FILE_CHOOSER (dialog);
+  gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
+  gtk_file_chooser_set_current_name (chooser, "Untitled document");
+  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
+  {
+    char *filename;
+    filename = gtk_file_chooser_get_filename (chooser);
+    saveFile(filename);
+  }
+  gtk_widget_destroy (dialog);
+}
 
 void on_menu_quit_button_press_event()
 {
@@ -1290,26 +1049,21 @@ void on_menu_about_button_press_event()
 void on_set_ph_btn_clicked(GtkWidget *widget, Widgets *data)
 {
   GtkBuilder *builder;
+  GtkWidget *window;
   GtkWidget *accept;
   GtkWidget *label;
-  gchar* message;
+  gchar* message = NULL;
 
-  if (gtk_entry_get_text_length(GTK_ENTRY(data->tb_4)))
+  float _ph = (float) gtk_spin_button_get_value(data->sb_2);
+  if (_ph > 0 && _ph < 1)
   {
-	  if (isfloat(GTK_ENTRY(data->tb_4)))
-	  {
-      float _ph = (float) strtof(gtk_entry_get_text(GTK_ENTRY(data->tb_4)), (char **)NULL);
-      if (_ph > 0 && _ph < 1)
-      {
-        PH = _ph;
-        _ph = 1 - _ph;
-	      char ph_s[FLOAT_LEN];
-	      snprintf(ph_s, sizeof(ph_s), "%.3f", ph);
-	      gtk_entry_set_text (GTK_ENTRY(data->lbl_1), ph_s);
-	      gtk_widget_show_all(data->parent);
-	    }else message = "La probabilidad de que el equipo A gane debe estar entre 0.0 y 1.0.";
-	  }else message = "El valor ingresado en la probabilidad de que el equipo A gane en casa no es un valor flotante.";
-  }else message = "No hay datos en el campo de la probabilidad de que el equipo A gane en casa.";
+    PH = _ph;
+    _ph = 1 - _ph;
+    char ph_s[FLOAT_LEN];
+    snprintf(ph_s, FLOAT_LEN, "%.5f", _ph);
+    gtk_label_set_text (data->lbl_1, ph_s);
+    gtk_widget_show_all(data->parent);
+  }else message = "La probabilidad de que el equipo A gane debe estar entre 0.0 y 1.0.";
 
   if (message)
   {
@@ -1331,29 +1085,23 @@ void on_set_ph_btn_clicked(GtkWidget *widget, Widgets *data)
 void on_set_pr_btn_clicked(GtkWidget *widget, Widgets *data)
 {
   GtkBuilder *builder;
+  GtkWidget *window;
   GtkWidget *accept;
   GtkWidget *label;
-  gchar* message;
-  int error = 0;
+  gchar* message = NULL;
 
-  if (gtk_entry_get_text_length(GTK_ENTRY(data->tb_4)))
+  float _pr = (float) gtk_spin_button_get_value(data->sb_3);
+  if (_pr > 0 && _pr < 1)
   {
-    if (isfloat(GTK_ENTRY(data->tb_4)))
-    {
-      float _pr = (float) strtof(gtk_entry_get_text(GTK_ENTRY(data->tb_5)), (char **)NULL);
-      if (_pr > 0 && _pr < 1)
-      {
-        PR = _pr;
-        _pr = 1 - _pr;
-        char pr_s[FLOAT_LEN];
-        snprintf(pr_s, sizeof(pr_s), "%.3f", _pr);
-        gtk_entry_set_text (GTK_ENTRY(data->lbl_2), pr_s);
-        gtk_widget_show_all(data->parent);
-      }else error = 2;
-    }else error = 3;
-  }else error = 1;
+    PR = _pr;
+    _pr = 1 - _pr;
+    char pr_s[FLOAT_LEN];
+    snprintf(pr_s, FLOAT_LEN, "%.5f", _pr);
+    gtk_label_set_text (data->lbl_2, pr_s);
+    gtk_widget_show_all(data->parent);
+  }else message = "La probabilidad de que el equipo A gane debe estar entre 0.0 y 1.0.";
 
-  if (error)
+  if (message)
   {
     builder = gtk_builder_new();
     gtk_builder_add_from_file (builder, GLADE, NULL);
@@ -1363,19 +1111,7 @@ void on_set_pr_btn_clicked(GtkWidget *widget, Widgets *data)
     accept = GTK_WIDGET(gtk_builder_get_object(builder, "message_ok_btn"));
     g_signal_connect (G_OBJECT (accept), "clicked", G_CALLBACK (close_window), G_OBJECT (window));
     label = GTK_WIDGET(gtk_builder_get_object(builder, "message_lbl"));
-    if (error == 1)
-    {
-      const gchar* message = "No hay datos en el campo de la probabilidad de que el equipo A gane de visita.";
-      gtk_label_set_text (GTK_LABEL(label), message);
-    }else if (error = 2)
-    {
-      const gchar* message = "El valor ingresado en la probabilidad de que el equipo A gane de visita no es un valor flotante.";
-      gtk_label_set_text (GTK_LABEL(label), message);
-    }else if (error = 3)
-    {
-      const gchar* message = "La probabilidad de que el equipo A gane debe estar entre 0.0 y 1.0.";
-      gtk_label_set_text (GTK_LABEL(label), message);
-    }
+    gtk_label_set_text (GTK_LABEL(label), message);
     g_object_unref(builder);
     gtk_widget_show_all(window);
     gtk_main();
@@ -1401,6 +1137,8 @@ int main(int argc, char *argv[])
 
   Widgets *widgets = NULL; 
 
+  GtkWidget *open = NULL;
+
   gtk_init(&argc, &argv);
 
   CSS();
@@ -1424,11 +1162,20 @@ int main(int argc, char *argv[])
   widgets->parent = window;
   g_signal_connect (G_OBJECT(window), "destroy", G_CALLBACK(on_config_destroy), widgets);
 
-  widgets->tb_1 = GTK_WIDGET(gtk_builder_get_object(builder, "best_of_tb"));
-  widgets->tb_2 = GTK_WIDGET(gtk_builder_get_object(builder, "team_a_tb"));
-  widgets->tb_3 = GTK_WIDGET(gtk_builder_get_object(builder, "team_b_tb"));
-  widgets->tb_4 = GTK_WIDGET(gtk_builder_get_object(builder, "ph_tb"));
-  widgets->tb_5 = GTK_WIDGET(gtk_builder_get_object(builder, "pr_tb"));
+  widgets->table = NULL;
+
+  widgets->sb_1 = GTK_WIDGET(gtk_builder_get_object(builder, "best_of_tb"));
+    gtk_spin_button_set_range (GTK_SPIN_BUTTON(widgets->sb_1),1,99);
+    gtk_spin_button_set_increments (GTK_SPIN_BUTTON(widgets->sb_1),2,3);
+  widgets->sb_2 = GTK_WIDGET(gtk_builder_get_object(builder, "ph_tb"));
+    gtk_spin_button_set_range (GTK_SPIN_BUTTON(widgets->sb_2),0,1);
+    gtk_spin_button_set_increments (GTK_SPIN_BUTTON(widgets->sb_2),0.001,1);
+  widgets->sb_3 = GTK_WIDGET(gtk_builder_get_object(builder, "pr_tb"));
+    gtk_spin_button_set_range (GTK_SPIN_BUTTON(widgets->sb_3),0,1);
+    gtk_spin_button_set_increments (GTK_SPIN_BUTTON(widgets->sb_3),0.001,1);
+
+  widgets->tb_1 = GTK_WIDGET(gtk_builder_get_object(builder, "team_a_tb"));
+  widgets->tb_2 = GTK_WIDGET(gtk_builder_get_object(builder, "team_b_tb"));
 
   widgets->lbl_1 = GTK_WIDGET(gtk_builder_get_object(builder, "qr_lbl"));
   widgets->lbl_2 = GTK_WIDGET(gtk_builder_get_object(builder, "qh_lbl"));
@@ -1439,11 +1186,14 @@ int main(int argc, char *argv[])
   set_pr = GTK_WIDGET(gtk_builder_get_object(builder, "set_pr_btn"));
   g_signal_connect(G_OBJECT (set_pr), "clicked", G_CALLBACK (on_set_pr_btn_clicked), widgets);
 
-  accept = GTK_WIDGET(gtk_builder_get_object(builder, "continue_btn"));
+  accept = GTK_WIDGET(gtk_builder_get_object(builder, "continue_config_btn"));
   g_signal_connect(G_OBJECT (accept), "clicked", G_CALLBACK (on_accept_config_btn_clicked), widgets);
 
-  exit = GTK_WIDGET(gtk_builder_get_object(builder, "exit_btn"));
+  exit = GTK_WIDGET(gtk_builder_get_object(builder, "exit_config_btn"));
   g_signal_connect(G_OBJECT (exit), "clicked", G_CALLBACK (close_window), widgets->parent);
+
+  open = GTK_WIDGET(gtk_builder_get_object(builder, "menu_open"));
+  g_signal_connect(G_OBJECT(open), "button-press-event", G_CALLBACK(on_menu_open_button_press_event), widgets);
 
   g_object_unref(builder);
   gtk_widget_show(window);

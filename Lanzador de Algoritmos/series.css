@@ -1,0 +1,89 @@
+#window{
+    background-color: #DED29E;
+    color: #685642;
+    font-size:14px;
+    font-weight: bold;
+}
+
+#button{
+    background-color: #B3A580;
+    color: #F4F0CB;
+    font-size:14px;
+    font-weight: bold;
+}
+#button:hover{
+    background-color: #685642;
+    color: #F4F0CB;
+}
+
+#label{
+    color: #685642;
+}
+
+#entry{
+    background: #F4F0CB;
+    color: #B3A580;
+    margin: 5px 5px 5px 5px;
+}
+
+#team_a_lbl{
+    color: #88a83d;
+}
+
+#team_a_name
+{
+    background: #B7C68B;
+    color: #EFEBD6;
+}
+
+#team_b_lbl{
+    color: #FF8362;
+}
+
+#team_b_name
+{
+    background: #FF8362;
+    color: #EFEBD6;
+}
+
+
+#team_a_entry
+{
+    background: #B7C68B;
+    color: #EFEBD6;
+    margin: 5px 5px 5px 5px;
+}
+
+#team_b_entry
+{
+    background: #FF8362;
+    color: #EFEBD6;
+    margin: 5px 5px 5px 5px;
+}
+
+#label_menu
+{
+    color: #F4F0CB;
+}
+
+#box{
+    background: #DED29E;
+    color: #F4F0CB;
+}
+
+#_textview{
+    background-color: #F4F0CB;
+    color: #B3A580;
+}
+
+#_textview text{
+    background-color: #F4F0CB;
+    color: #B3A580;
+}
+
+#spin{
+    background-color: #F4F0CB;
+    background: #F4F0CB;
+    color: #B3A580;
+    font-size: 14px;
+}

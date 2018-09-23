@@ -13,7 +13,7 @@ void CSS(void)
   screen = gdk_display_get_default_screen (display);
   gtk_style_context_add_provider_for_screen (screen, GTK_STYLE_PROVIDER (provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
-  const gchar *cssFile = "custom.css";
+  const gchar *cssFile = "series.css";
   GError *error = 0;
   gtk_css_provider_load_from_file(provider, g_file_new_for_path(cssFile), &error);
   g_object_unref (provider);
@@ -83,7 +83,7 @@ void on_tba_btn_1_clicked()
 
 void on_tba_btn_2_clicked()
 {
-  system("./pending &");
+  system("./series &");
 }
 
 void on_tba_btn_3_clicked()
