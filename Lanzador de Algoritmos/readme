@@ -2,5 +2,7 @@ Lanzador de Algoritmos:
 + Floyd (P) (L)
 + Knapsack (J)
 + Series (P)
+	Para guardar archivo, en pantalla de la tabla final escoger 'save' de la barra del menu.
+	Para cargar archivo, en pantalla principal presionar el boton de 'load'
 - Reemplazo de Equipos
 - Árboles Binarios de Búsqueda Óptimos

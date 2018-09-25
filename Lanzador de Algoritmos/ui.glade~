@@ -53,25 +53,12 @@ Luis Pablo Monge Angulo</property>
       </object>
     </child>
   </object>
-  <object class="GtkTextBuffer" id="textbuffer_pm">
-    <property name="text" translatable="yes">+ Resuelve el problema de llenar una mochila, incapaz de soportar más de un peso determinado, con todo o parte de un conjunto de objetos, cada uno con un peso y valor específicos. Los objetos colocados en la mochila deben maximizar el valor total sin exceder el peso máximo. </property>
-  </object>
-  <object class="GtkTextBuffer" id="textbuffer_rmc">
-    <property name="text" translatable="yes">+ Resuelve el problema de encontrar las rutas más cortas entre cualquier par de nodos de un grafo con ponderaciones en los arcos.</property>
-  </object>
-  <object class="GtkTextBuffer" id="textbuffer_series">
-    <property name="text" translatable="yes">+ Determina la probabilidad de un equipo de ganar una serie deportiva.</property>
-  </object>
-  <object class="GtkTextBuffer" id="textbuffer_tba_3">
-    <property name="text" translatable="yes">+ Esta información aun no está disponible.</property>
-  </object>
-  <object class="GtkTextBuffer" id="textbuffer_tba_4">
-    <property name="text" translatable="yes">+ Esta información aun no está disponible.</property>
-  </object>
   <object class="GtkWindow" id="menu">
     <property name="name">window</property>
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Lanzador de Algoritmos</property>
+    <property name="default_width">480</property>
+    <property name="default_height">320</property>
     <signal name="destroy" handler="on_menu_destroy" swapped="no"/>
     <child type="titlebar">
       <object class="GtkBox">
@@ -178,17 +165,10 @@ Luis Pablo Monge Angulo</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkTextView" id="rmc_text_view">
-                    <property name="name">_textview</property>
-                    <property name="height_request">250</property>
+                  <object class="GtkImage">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="editable">False</property>
-                    <property name="wrap_mode">word</property>
-                    <property name="indent">10</property>
-                    <property name="cursor_visible">False</property>
-                    <property name="buffer">textbuffer_rmc</property>
-                    <property name="accepts_tab">False</property>
+                    <property name="can_focus">False</property>
+                    <property name="pixbuf">floyd.png</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -219,7 +199,7 @@ Luis Pablo Monge Angulo</property>
                 <property name="name">label_menu</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Obtiene las rutas óptimas entre cualquier par de nodos en un grafo ponderado con distancias</property>
+                <property name="tooltip_text" translatable="yes">Resuelve el problema de encontrar las rutas más cortas entre cualquier par de nodos de un grafo con ponderaciones en los arcos. Obtiene las rutas y distancias óptimas entre cualquier par de nodos en un grafo ponderado con distancias.</property>
                 <property name="label" translatable="yes">Rutas Más Cortas</property>
               </object>
               <packing>
@@ -233,17 +213,10 @@ Luis Pablo Monge Angulo</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkTextView" id="pm_text_view">
-                    <property name="name">_textview</property>
-                    <property name="height_request">250</property>
+                  <object class="GtkImage">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="editable">False</property>
-                    <property name="wrap_mode">word</property>
-                    <property name="indent">10</property>
-                    <property name="cursor_visible">False</property>
-                    <property name="buffer">textbuffer_pm</property>
-                    <property name="accepts_tab">False</property>
+                    <property name="can_focus">False</property>
+                    <property name="pixbuf">knapsack.png</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -277,7 +250,7 @@ Luis Pablo Monge Angulo</property>
                 <property name="name">label_menu</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Obtiene la cantidad optima de elementos que puede ingresar en un objeto con capacidad limitada de espacio. Resuelve el problema de encontrar las rutas más cortas entre cualquier par de nodos de un grafo con ponderaciones en los arcos.</property>
+                <property name="tooltip_text" translatable="yes">Resuelve el problema de llenar una mochila, incapaz de soportar más de un peso determinado, con todo o parte de un conjunto de objetos, cada uno con un peso y valor específicos. Los objetos colocados en la mochila deben maximizar el valor total sin exceder el peso máximo.  Obtiene la cantidad optima de elementos que puede ingresar en un objeto con capacidad limitada de espacio.</property>
                 <property name="label" translatable="yes">Problema de la mochila</property>
               </object>
               <packing>
@@ -292,16 +265,10 @@ Luis Pablo Monge Angulo</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkTextView" id="series_text_view">
-                    <property name="name">_textview</property>
-                    <property name="height_request">250</property>
+                  <object class="GtkImage">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="editable">False</property>
-                    <property name="indent">10</property>
-                    <property name="cursor_visible">False</property>
-                    <property name="buffer">textbuffer_series</property>
-                    <property name="accepts_tab">False</property>
+                    <property name="can_focus">False</property>
+                    <property name="pixbuf">series.png</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -350,16 +317,10 @@ Luis Pablo Monge Angulo</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkTextView" id="re_text_view">
-                    <property name="name">_textview</property>
-                    <property name="height_request">250</property>
+                  <object class="GtkImage">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="editable">False</property>
-                    <property name="indent">10</property>
-                    <property name="cursor_visible">False</property>
-                    <property name="buffer">textbuffer_tba_3</property>
-                    <property name="accepts_tab">False</property>
+                    <property name="can_focus">False</property>
+                    <property name="pixbuf">tbd_small.png</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -408,16 +369,10 @@ Luis Pablo Monge Angulo</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkTextView" id="abbo_text_view">
-                    <property name="name">_textview</property>
-                    <property name="height_request">250</property>
+                  <object class="GtkImage">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="editable">False</property>
-                    <property name="indent">10</property>
-                    <property name="cursor_visible">False</property>
-                    <property name="buffer">textbuffer_tba_4</property>
-                    <property name="accepts_tab">False</property>
+                    <property name="can_focus">False</property>
+                    <property name="pixbuf">tbd_small.png</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
