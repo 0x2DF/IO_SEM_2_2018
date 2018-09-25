@@ -335,7 +335,7 @@ Luis Pablo Monge Angulo</property>
                 <property name="name">label_menu</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Determina la probabilidad de un equipo de ganar una serie deportiva.</property>
+                <property name="tooltip_text" translatable="yes">Determina la probabilidad de un equipo de ganar una serie deportiva. Se elige una cantidad impar N de juegos y el primero en ganar N + 1 / 2 juegos es el ganador de la serie. Cada equipo consta con una probabilidad de ganar de casa o visita dependiendo de la ventaja de localía asignada. Además la serie se juega con un formato establecido. Al final se despliega una tabla donde cada entrada representa el juego de la serie que se está jugando y la probabilidad que tiene el equipo A en ganar. Para una serie de ‘mejor de 7’ la entrada (4,4) representa la probabilidad de que el equipo A gane la serie dado que no se ha jugado ningún juego. La entrada (1,1) representa la probabilidad de que el equipo A gane dado que están jugando el último encuentro de la serie.</property>
                 <property name="label" translatable="yes">Series Deportivas</property>
               </object>
               <packing>
@@ -426,7 +426,7 @@ Luis Pablo Monge Angulo</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="tba_btn_4">
+                  <object class="GtkButton" id="abbo_btn">
                     <property name="label" translatable="yes">Correr</property>
                     <property name="name">button</property>
                     <property name="visible">True</property>

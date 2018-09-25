@@ -772,7 +772,7 @@ void on_accept_config_btn_clicked(GtkWidget *widget, Widgets *data)
   if (BoN <= 0)
   {
     message = "Cantidad de juegos tiene que ser superior a 0.";
-  }
+  }else if (!(BoN & 1)) message = "Cantidad de juegos tiene que ser impar.";
 
   if (!message)
   {
@@ -930,7 +930,6 @@ void fast_load(Widgets *data)
   g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (on_results_destroy), widgets);
   widgets->parent = window;
   gtk_builder_connect_signals(builder, NULL);
-  gtk_window_set_transient_for (widgets->parent, data->parent);
 
   scroll = GTK_WIDGET(gtk_builder_get_object(builder, "results_scrolled"));
 
@@ -972,18 +971,25 @@ void fast_load(Widgets *data)
   exit = GTK_WIDGET(gtk_builder_get_object(builder, "exit_results_btn"));
   g_signal_connect (G_OBJECT (exit), "clicked", G_CALLBACK (close_window), widgets->parent);
 
+  gtk_spin_button_set_value (GTK_SPIN_BUTTON(data->sb_1),BoN);
+  gtk_spin_button_set_value (GTK_SPIN_BUTTON(data->sb_2),PH);
+  gtk_spin_button_set_value (GTK_SPIN_BUTTON(data->sb_3),PR);
+  gtk_entry_set_text (GTK_ENTRY(data->tb_1), TEAMS[0]);
+  gtk_entry_set_text (GTK_ENTRY(data->tb_2), TEAMS[1]);
+
   g_object_unref(builder);
   gtk_widget_show_all(widgets->parent);
   
   gtk_main();
 }
 
-void on_menu_open_button_press_event(GtkWidget *widget, Widgets *data)
+void on_load_config_btn_clicked(GtkWidget *widget, Widgets *data)
 {
+  printf("data = %d\n(data->sb_1) = %d\n", data, (data->sb_1));
   GtkWidget *dialog;
   dialog = gtk_file_chooser_dialog_new("Open File", NULL, GTK_FILE_CHOOSER_ACTION_OPEN, "_Cancel", 
           GTK_RESPONSE_CANCEL, "_Open", GTK_RESPONSE_ACCEPT, NULL);
- LOADED = 0;
+  LOADED = 0;
   if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
   {
     char *filename;
@@ -993,8 +999,32 @@ void on_menu_open_button_press_event(GtkWidget *widget, Widgets *data)
   gtk_widget_destroy (dialog);
   if (LOADED != -1)
   {
+    LOADED = 1;
     fast_load(data);
+
+
+
   }
+}
+
+void on_menu_open_button_press_event(GtkWidget *widget, Widgets *data)
+{
+  // GtkWidget *dialog;
+  // dialog = gtk_file_chooser_dialog_new("Open File", NULL, GTK_FILE_CHOOSER_ACTION_OPEN, "_Cancel", 
+  //         GTK_RESPONSE_CANCEL, "_Open", GTK_RESPONSE_ACCEPT, NULL);
+  // LOADED = 0;
+  // if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
+  // {
+  //   char *filename;
+  //   filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+  //   loadFileBetter(filename);
+  // }
+  // gtk_widget_destroy (dialog);
+  // if (LOADED != -1)
+  // {
+  //   LOADED = 1;
+  //   fast_load(data);
+  // }
 }
 
 void on_menu_save_as_button_press_event()
@@ -1124,13 +1154,13 @@ void on_set_pr_btn_clicked(GtkWidget *widget, Widgets *data)
 
 int main(int argc, char *argv[])
 {
-
   GtkBuilder *builder = NULL;
   GtkWidget *window = NULL;
   GError *err = NULL;
 
   GtkWidget *accept = NULL;
   GtkWidget *exit = NULL;
+  GtkWidget *load = NULL;
 
   GtkWidget *set_ph = NULL;
   GtkWidget *set_pr = NULL;
@@ -1192,6 +1222,10 @@ int main(int argc, char *argv[])
   exit = GTK_WIDGET(gtk_builder_get_object(builder, "exit_config_btn"));
   g_signal_connect(G_OBJECT (exit), "clicked", G_CALLBACK (close_window), widgets->parent);
 
+  load = GTK_WIDGET(gtk_builder_get_object(builder, "load_config_btn"));
+  g_signal_connect(G_OBJECT (load), "clicked", G_CALLBACK (on_load_config_btn_clicked), widgets);
+
+  printf("widgets = %d\n(widgets->sb_1) = %d\n", widgets, (widgets->sb_1));
   open = GTK_WIDGET(gtk_builder_get_object(builder, "menu_open"));
   g_signal_connect(G_OBJECT(open), "button-press-event", G_CALLBACK(on_menu_open_button_press_event), widgets);
 

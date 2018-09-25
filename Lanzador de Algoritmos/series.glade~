@@ -77,15 +77,6 @@ Luis Pablo Monge Angulo</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkImageMenuItem" id="open_menu">
-                        <property name="label">gtk-open</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
-                      </object>
-                    </child>
-                    <child>
                       <object class="GtkSeparatorMenuItem">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -540,6 +531,20 @@ Luis Pablo Monge Angulo</property>
             <property name="can_focus">False</property>
             <property name="homogeneous">True</property>
             <child>
+              <object class="GtkButton" id="load_config_btn">
+                <property name="label" translatable="yes">Load</property>
+                <property name="name">button</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkButton" id="continue_config_btn">
                 <property name="label" translatable="yes">Continuar</property>
                 <property name="name">button</property>
@@ -550,7 +555,7 @@ Luis Pablo Monge Angulo</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">0</property>
+                <property name="position">1</property>
               </packing>
             </child>
             <child>
@@ -564,7 +569,7 @@ Luis Pablo Monge Angulo</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
           </object>
