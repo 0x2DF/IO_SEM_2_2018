@@ -1,0 +1,43 @@
+#window{
+    background-color: #DED29E;
+    color: #685642;
+    font-size:14px;
+    font-weight: bold;
+}
+
+#button{
+    background-color: #B3A580;
+    color: #B0A965;
+    font-size:14px;
+    font-weight: bold;
+}
+
+#button:hover{
+    background-color: #685642;
+    color: #D1CB96;
+}
+
+#label{
+    color: #685642;
+}
+
+#entry{
+    background: #F4F0CB;
+    color: #B3A580;
+    margin: 5px 5px 5px 5px;
+}
+
+#spin{
+    background-color: #F4F0CB;
+    background: #F4F0CB;
+    color: #B3A580;
+    font-size: 14px;
+}
+
+#load_label{
+    background-color: #24E711;
+}
+
+#no_load_label{
+    background-color: #FFFFFF;
+}

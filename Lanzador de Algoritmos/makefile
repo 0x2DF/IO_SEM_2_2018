@@ -25,6 +25,8 @@ all: $(OBJS)
 	$(CC) -o floyd src/floyd.c $(CCFLAGS) $(LDFLAGS)
 	$(CC) -o knapsack src/knapsack.c $(CCFLAGS) $(LDFLAGS)
 	$(CC) -o series src/series.c $(CCFLAGS) $(LDFLAGS)
+	$(CC) -o equipos src/equipos.c $(CCFLAGS) $(LDFLAGS)
+	$(CC) -o abbo src/abbo.c $(CCFLAGS) $(LDFLAGS)
 
 menu.o: src/menu.c
 	$(CC) -c $(CCFLAGS) src/menu.c $(GTKLIB) -o menu.o

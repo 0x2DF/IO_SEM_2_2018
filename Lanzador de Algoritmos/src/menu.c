@@ -88,12 +88,12 @@ void on_tba_btn_2_clicked()
 
 void on_tba_btn_3_clicked()
 {
-  system("./pending &");
+  system("./equipos &");
 }
 
 void on_tba_btn_4_clicked()
 {
-  system("./pending &");
+  system("./abbo &");
 }
 
 void on_about_ok_btn_clicked()
